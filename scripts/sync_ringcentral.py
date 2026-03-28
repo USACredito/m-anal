@@ -11,7 +11,7 @@ from dotenv import load_dotenv
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from scripts.nocodb_client import listar_registros, añadir_registro
+from scripts.nocodb_client import listar_registros, crear_registro
 
 load_dotenv()
 
@@ -105,7 +105,7 @@ def sync_calls(dias_atras=1):
         }
         
         # Añadir si no existe (simplificado: el usuario debe manejar la unicidad o yo añadir un check)
-        añadir_registro(tabla_destino, data_noco)
+        crear_registro(tabla_destino, data_noco)
         print(f"  [OK] Registrada llamada {call_id}")
 
 if __name__ == "__main__":

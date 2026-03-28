@@ -10,8 +10,7 @@ from dotenv import load_dotenv
 
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from scripts.nocodb_client import listar_registros, añadir_registro
-
+from scripts.nocodb_client import listar_registros, crear_registro
 load_dotenv()
 
 # Configuración Aircall
@@ -67,7 +66,7 @@ def sync_calls():
             }
             
             # Insertar en NocoDB (Ventas por defecto)
-            añadir_registro("llamadas_ventas", data_noco)
+            crear_registro("llamadas_ventas", data_noco)
             print(f"  [OK] Registrada llamada {call_id} de {user_name}")
 
     except Exception as e:

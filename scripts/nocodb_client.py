@@ -26,7 +26,7 @@ HEADERS = {
 
 def _get_table_url(table_name: str) -> str:
     """Construye la URL para una tabla de NocoDB siguiendo el formato v1."""
-    return f"{NOCODB_BASE_API_URL}/db/data/noco/{PROJECT_ID}/{table_name}"
+    return f"{NOCODB_BASE_API_URL}/db/data/v1/{PROJECT_ID}/{table_name}"
 
 
 def listar_registros(table_name: str, where: str = "", limit: int = 200) -> list:
