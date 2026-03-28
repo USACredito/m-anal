@@ -97,12 +97,12 @@ def procesar_llamadas():
     
     for tabla in TABLAS:
         print(f"\n--- Revisando tabla: {tabla} ---")
-        registros = listar_registros(tabla, where="(estado_procesamiento,eq,pendiente)")
+        registros = listar_registros(tabla, where="(Estado,eq,pendiente)")
         
         for r in registros:
             nocodb_id = r.get("Id")
-            call_id = r.get("id_fathom") or str(nocodb_id)
-            url_audio = r.get("url_grabacion")
+            call_id = r.get("ID Fathom") or str(nocodb_id)
+            url_audio = r.get("URL Grabación")
             
             if not url_audio:
                 print(f"  → [{call_id}] Sin URL de grabación. Saltando.")
@@ -118,9 +118,9 @@ def procesar_llamadas():
             if texto:
                 # 3. Actualizar NocoDB
                 actualizar_registro(tabla, nocodb_id, {
-                    "transcripcion_texto": texto,
-                    "estado_procesamiento": "transcrito",
-                    "fecha_procesamiento": datetime.now().strftime("%Y-%m-%d")
+                    "Transcripción Texto": texto,
+                    "Estado": "transcrito",
+                    "Fecha Procesamiento": datetime.now().strftime("%Y-%m-%d")
                 })
                 print(f"  [OK] [{call_id}] Transcripción completada.")
                 total_procesadas += 1

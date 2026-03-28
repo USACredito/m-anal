@@ -132,10 +132,10 @@ def marcar_llamadas_como_reportadas(fecha_inicio: str, fecha_fin: str):
     tablas = ["llamadas_ventas", "llamadas_soporte", "llamadas_onboarding"]
     for tabla in tablas:
         try:
-            registros = listar_registros(tabla, where="(estado_procesamiento,eq,transcrito)")
-            filtrados = [r for r in registros if fecha_inicio <= r.get("fecha", "") <= fecha_fin]
+            registros = listar_registros(tabla, where="(Estado,eq,transcrito)")
+            filtrados = [r for r in registros if fecha_inicio <= r.get("Fecha", "") <= fecha_fin]
             for r in filtrados:
-                actualizar_registro(tabla, r["Id"], {"estado_procesamiento": "reportado"})
+                actualizar_registro(tabla, r["Id"], {"Estado": "reportado"})
             if filtrados:
                 print(f"  → {len(filtrados)} llamadas en '{tabla}' marcadas como 'reportado'")
         except Exception as e:
@@ -179,14 +179,14 @@ def main():
     reportes_generados = []
 
     categorias = {
-        "ventas": "recibe_ventas",
-        "soporte": "recibe_soporte",
-        "onboarding": "recibe_onboarding",
+        "ventas": "Ventas",
+        "soporte": "Soporte",
+        "onboarding": "Onboarding",
     }
 
     for dest in destinatarios:
-        nombre = dest.get("nombre", "Usuario")
-        email = dest.get("email", "")
+        nombre = dest.get("Nombre", "Usuario")
+        email = dest.get("Email", "")
 
         if not email:
             continue

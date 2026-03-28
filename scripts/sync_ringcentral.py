@@ -65,7 +65,7 @@ def sync_calls(dias_atras=1):
     print(f"[RC] Se encontraron {len(calls)} llamadas con grabación.")
 
     # 1. Obtener lista de agentes para clasificar (Setter/Closer)
-    agentes = {a.get("nombre"): a for a in listar_registros("agentes")}
+    agentes = {a.get("Nombre"): a for a in listar_registros("agentes")}
 
     for call in calls:
         call_id = str(call.get("id"))
@@ -79,7 +79,7 @@ def sync_calls(dias_atras=1):
         
         # Lógica de clasificación simplificada
         agente = agentes.get(from_name) or agentes.get(to_name)
-        rol = agente.get("tipo") if agente else "Ventas" # Default si no está en la tabla
+        rol = agente.get("Tipo") if agente else "Ventas" # Default si no está en la tabla
         
         # Seleccionar tabla según rol
         # (Aunque el usuario dijo solo setters y closers, usaremos llamadas_ventas por ahora)
@@ -93,15 +93,15 @@ def sync_calls(dias_atras=1):
 
         # Insertar en NocoDB
         data_noco = {
-            "id_fathom": call_id, # Usamos el ID de RC como ID único
-            "titulo": f"Llamada RC: {from_name} -> {to_name}",
-            "fecha": call.get("startTime", "")[:10],
-            "hora": call.get("startTime", "")[11:16],
-            "duracion_minutos": round(call.get("duration", 0) / 60, 2),
-            "participantes": f"{from_name}, {to_name}",
-            "url_grabacion": url_audio,
-            "tipo": rol,
-            "estado_procesamiento": "pendiente"
+            "ID Fathom": call_id, # Usamos el ID de RC como ID único
+            "Título": f"Llamada RC: {from_name} -> {to_name}",
+            "Fecha": call.get("startTime", "")[:10],
+            "Hora": call.get("startTime", "")[11:16],
+            "Duración (min)": round(call.get("duration", 0) / 60, 2),
+            "Participantes": f"{from_name}, {to_name}",
+            "URL Grabación": url_audio,
+            "Tipo": rol,
+            "Estado": "pendiente"
         }
         
         # Añadir si no existe (simplificado: el usuario debe manejar la unicidad o yo añadir un check)

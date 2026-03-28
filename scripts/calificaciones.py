@@ -141,12 +141,12 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
     califs_closers = []
 
     for r in registros:
-        transcripcion = r.get("transcripcion_texto", "")
+        transcripcion = r.get("Transcripción Texto", "")
         if not transcripcion:
             continue
 
-        call_id = r.get("id_fathom", "N/A")
-        fecha = r.get("fecha", "")
+        call_id = r.get("ID Fathom", "N/A")
+        fecha = r.get("Fecha", "")
         mes_anio = datetime.now().strftime("%Y-%m")
 
         # ── Calificar Lead ──
@@ -155,15 +155,14 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
         if "error" not in resultado_lead:
             try:
                 crear_registro("calificaciones_leads", {
-                    "id_llamada_fathom": call_id,
-                    "fecha_llamada": fecha,
-                    "fecha_calificacion": datetime.now().strftime("%Y-%m-%d"),
-                    "calificacion": resultado_lead.get("calificacion", 0),
-                    "nivel": resultado_lead.get("nivel", ""),
-                    "justificacion": resultado_lead.get("justificacion", ""),
-                    "factores_positivos": json.dumps(resultado_lead.get("factores_positivos", []), ensure_ascii=False),
-                    "factores_negativos": json.dumps(resultado_lead.get("factores_negativos", []), ensure_ascii=False),
-                    "mes_año": mes_anio,
+                    "ID Llamada": call_id,
+                    "Fecha Llamada": fecha,
+                    "Calificación": resultado_lead.get("calificacion", 0),
+                    "Nivel": resultado_lead.get("nivel", ""),
+                    "Justificación": resultado_lead.get("justificacion", ""),
+                    "Positivos": json.dumps(resultado_lead.get("factores_positivos", []), ensure_ascii=False),
+                    "Negativos": json.dumps(resultado_lead.get("factores_negativos", []), ensure_ascii=False),
+                    "Mes-Año": mes_anio,
                 })
                 califs_leads.append(resultado_lead.get("calificacion", 0))
             except Exception as e:
@@ -176,20 +175,16 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
             desglose = resultado_closer.get("desglose", {})
             try:
                 crear_registro("calificaciones_closers", {
-                    "id_llamada_fathom": call_id,
-                    "fecha_llamada": fecha,
-                    "fecha_calificacion": datetime.now().strftime("%Y-%m-%d"),
-                    "nombre_closer": resultado_closer.get("nombre_closer", "Desconocido"),
-                    "calificacion_total": resultado_closer.get("calificacion_total", 0),
-                    "calificacion_rapport": desglose.get("rapport", 0),
-                    "calificacion_descubrimiento": desglose.get("descubrimiento", 0),
-                    "calificacion_presentacion": desglose.get("presentacion", 0),
-                    "calificacion_objeciones": desglose.get("objeciones", 0),
-                    "calificacion_cierre": desglose.get("cierre", 0),
-                    "fortalezas": json.dumps(resultado_closer.get("fortalezas", []), ensure_ascii=False),
-                    "areas_mejora": json.dumps(resultado_closer.get("areas_mejora", []), ensure_ascii=False),
-                    "resultado": resultado_closer.get("resultado_llamada", ""),
-                    "mes_año": mes_anio,
+                    "Fecha Llamada": fecha,
+                    "Closer": resultado_closer.get("nombre_closer", "Desconocido"),
+                    "Nota Total": resultado_closer.get("calificacion_total", 0),
+                    "Rapport": desglose.get("rapport", 0),
+                    "Descubrimiento": desglose.get("descubrimiento", 0),
+                    "Presentación": desglose.get("presentacion", 0),
+                    "Objeciones": desglose.get("objeciones", 0),
+                    "Cierre": desglose.get("cierre", 0),
+                    "Resultado": resultado_closer.get("resultado_llamada", ""),
+                    "Mes-Año": mes_anio,
                 })
                 califs_closers.append(resultado_closer.get("calificacion_total", 0))
             except Exception as e:
@@ -205,12 +200,12 @@ def calificar_onboarding(registros: list) -> float:
     califs = []
 
     for r in registros:
-        transcripcion = r.get("transcripcion_texto", "")
+        transcripcion = r.get("Transcripción Texto", "")
         if not transcripcion:
             continue
 
-        call_id = r.get("id_fathom", "N/A")
-        fecha = r.get("fecha", "")
+        call_id = r.get("ID Fathom", "N/A")
+        fecha = r.get("Fecha", "")
         mes_anio = datetime.now().strftime("%Y-%m")
 
         print(f"  → [{call_id}] Calificando onboarding...")
@@ -219,20 +214,16 @@ def calificar_onboarding(registros: list) -> float:
             desglose = resultado.get("desglose", {})
             try:
                 crear_registro("calificaciones_onboarding", {
-                    "id_llamada_fathom": call_id,
-                    "fecha_llamada": fecha,
-                    "fecha_calificacion": datetime.now().strftime("%Y-%m-%d"),
-                    "nombre_coach": resultado.get("nombre_coach", "Desconocido"),
-                    "calificacion_total": resultado.get("calificacion_total", 0),
-                    "calificacion_claridad": desglose.get("claridad", 0),
-                    "calificacion_adaptacion": desglose.get("adaptacion", 0),
-                    "calificacion_completitud": desglose.get("completitud", 0),
-                    "calificacion_tiempo": desglose.get("manejo_tiempo", 0),
-                    "calificacion_satisfaccion": desglose.get("satisfaccion_cliente", 0),
-                    "logros": json.dumps(resultado.get("logros", []), ensure_ascii=False),
-                    "errores_detectados": json.dumps(resultado.get("errores_detectados", []), ensure_ascii=False),
-                    "cliente_listo": resultado.get("cliente_listo_para_usar", ""),
-                    "mes_año": mes_anio,
+                    "Fecha Llamada": fecha,
+                    "Coach": resultado.get("nombre_coach", "Desconocido"),
+                    "Nota Total": resultado.get("calificacion_total", 0),
+                    "Claridad": desglose.get("claridad", 0),
+                    "Adaptación": desglose.get("adaptacion", 0),
+                    "Completitud": desglose.get("completitud", 0),
+                    "Tiempo": desglose.get("manejo_tiempo", 0),
+                    "Satisfacción": desglose.get("satisfaccion_cliente", 0),
+                    "Listo?": resultado.get("cliente_listo_para_usar", ""),
+                    "Mes-Año": mes_anio,
                 })
                 califs.append(resultado.get("calificacion_total", 0))
             except Exception as e:
@@ -247,14 +238,13 @@ def guardar_resumen_mensual(avg_leads, avg_closers, avg_onboarding,
     mes_anio = datetime.now().strftime("%Y-%m")
     try:
         crear_registro("resumen_mensual_calidad", {
-            "mes_año": mes_anio,
-            "promedio_calidad_leads": avg_leads,
-            "promedio_calidad_closers": avg_closers,
-            "promedio_calidad_onboarding": avg_onboarding,
-            "total_llamadas_ventas": n_ventas,
-            "total_llamadas_soporte": n_soporte,
-            "total_llamadas_onboarding": n_onboarding,
-            "fecha_calculo": datetime.now().strftime("%Y-%m-%d"),
+            "Mes-Año": mes_anio,
+            "Promedio Leads": avg_leads,
+            "Promedio Closers": avg_closers,
+            "Promedio Onboarding": avg_onboarding,
+            "Total Ventas": n_ventas,
+            "Total Soporte": n_soporte,
+            "Total Onboarding": n_onboarding,
         })
         print(f"\n[CALIFICACIONES] Resumen mensual {mes_anio} guardado en NocoDB.")
     except Exception as e:
@@ -272,8 +262,8 @@ def main():
     # Obtener registros transcriptos del rango
     def get_registros(tabla):
         try:
-            regs = listar_registros(tabla, where="(estado_procesamiento,eq,transcrito)")
-            return [r for r in regs if args.inicio <= r.get("fecha", "") <= args.fin]
+            regs = listar_registros(tabla, where="(Estado,eq,transcrito)")
+            return [r for r in regs if args.inicio <= r.get("Fecha", "") <= args.fin]
         except Exception as e:
             print(f"  [WARN] No se pudo leer {tabla}: {e}")
             return []

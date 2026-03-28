@@ -40,7 +40,7 @@ def sync_calls():
         print(f"[Aircall] Se encontraron {len(calls_with_recording)} llamadas con grabación.")
 
         # Obtener agentes para clasificar
-        agentes = {a.get("nombre"): a for a in listar_registros("agentes")}
+        agentes = {a.get("Nombre"): a for a in listar_registros("agentes")}
 
         for call in calls_with_recording:
             call_id = str(call.get("id"))
@@ -50,19 +50,19 @@ def sync_calls():
             
             # Clasificación básica por agente
             agente = agentes.get(user_name)
-            rol = agente.get("tipo") if agente else "Ventas"
+            rol = agente.get("Tipo") if agente else "Ventas"
             
             # Mapeo a tabla NocoDB
             data_noco = {
-                "id_fathom": call_id, # ID único para tracking
-                "titulo": f"Llamada Aircall: {user_name} -> {contact_number}",
-                "fecha": datetime.fromtimestamp(call.get("started_at", 0)).strftime("%Y-%m-%d"),
-                "hora": datetime.fromtimestamp(call.get("started_at", 0)).strftime("%H:%M"),
-                "duracion_minutos": round(call.get("duration", 0) / 60, 2),
-                "participantes": f"{user_name}, {contact_number}",
-                "url_grabacion": call.get("recording"),
-                "tipo": rol,
-                "estado_procesamiento": "pendiente"
+                "ID Fathom": call_id, # ID único para tracking
+                "Título": f"Llamada Aircall: {user_name} -> {contact_number}",
+                "Fecha": datetime.fromtimestamp(call.get("started_at", 0)).strftime("%Y-%m-%d"),
+                "Hora": datetime.fromtimestamp(call.get("started_at", 0)).strftime("%H:%M"),
+                "Duración (min)": round(call.get("duration", 0) / 60, 2),
+                "Participantes": f"{user_name}, {contact_number}",
+                "URL Grabación": call.get("recording"),
+                "Tipo": rol,
+                "Estado": "pendiente"
             }
             
             # Insertar en NocoDB (Ventas por defecto)
