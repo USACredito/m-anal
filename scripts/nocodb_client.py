@@ -15,19 +15,30 @@ RAW_URL = os.getenv("NOCODB_URL", "").split("/dashboard")[0].rstrip("/")
 NOCODB_API_TOKEN = os.getenv("NOCODB_API_TOKEN", "")
 PROJECT_ID = os.getenv("NOCODB_PROJECT_ID", "p9sqt7wk1bkr0lq")
 
-# La base de la API suele ser /api/v1
-NOCODB_BASE_API_URL = f"{RAW_URL}/api/v1"
+MAPA_TABLAS = {
+    "llamadas_ventas": "mb7fss7inq1ieul",
+    "llamadas_soporte": "mnfzrhp1xhwfhiw",
+    "llamadas_onboarding": "m33yp6t545w8h7t",
+    "agentes": "mabd7x8ql6q6rxj",
+    "calificaciones_leads": "m29g0pndl4ezy2u",
+    "calificaciones_closers": "mofs7kjyrc24le7",
+    "calificaciones_onboarding": "ms81roptu915w1g",
+    "lista_emails": "ms5wjsk10hmlif6",
+    "resumen_mensual_calidad": "m1nqjj8zpadeii5",
+    "features": "mfx4a2r2bl1v00k"
+}
+
+NOCODB_BASE_API_URL = f"{RAW_URL}/api/v3"
 
 HEADERS = {
     "xc-token": NOCODB_API_TOKEN,
     "Content-Type": "application/json",
 }
 
-
 def _get_table_url(table_name: str) -> str:
-    """Construye la URL para una tabla de NocoDB siguiendo el formato v1."""
-    return f"{NOCODB_BASE_API_URL}/db/data/v1/{PROJECT_ID}/{table_name}"
-
+    """Construye la URL para una tabla de NocoDB v3 usando su Table ID."""
+    table_id = MAPA_TABLAS.get(table_name, table_name)
+    return f"{NOCODB_BASE_API_URL}/data/{PROJECT_ID}/{table_id}/records"
 
 def listar_registros(table_name: str, where: str = "", limit: int = 200) -> list:
     """
@@ -84,8 +95,10 @@ def actualizar_registro(table_name: str, record_id: int, payload: dict) -> dict:
     :param payload: Campos a actualizar
     :return: Respuesta de la API
     """
-    url = f"{_get_table_url(table_name)}/{record_id}"
-    resp = requests.patch(url, headers=HEADERS, json=payload, timeout=15)
+    url = _get_table_url(table_name)
+    payload_copy = payload.copy()
+    payload_copy["Id"] = record_id  # NocoDB v3 requiere el Id dentro del payload
+    resp = requests.patch(url, headers=HEADERS, json=payload_copy, timeout=15)
     resp.raise_for_status()
     return resp.json()
 
