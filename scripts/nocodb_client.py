@@ -61,13 +61,16 @@ def listar_registros(table_name: str, where: str = "", limit: int = 200) -> list
         resp.raise_for_status()
         data = resp.json()
 
-        records = data.get("list", [])
-        all_records.extend(records)
+        raw_list = data.get("records", [])
+        for r in raw_list:
+            if "fields" in r:
+                flat = r["fields"].copy()
+                flat["Id"] = r.get("id")
+                all_records.append(flat)
+            else:
+                all_records.append(r)
 
-        page_info = data.get("pageInfo", {})
-        total = page_info.get("totalRows", len(all_records))
-
-        if offset + limit >= total:
+        if len(raw_list) < limit:
             break
         offset += limit
 
@@ -82,7 +85,9 @@ def crear_registro(table_name: str, payload: dict) -> dict:
     :return: Registro creado
     """
     url = _get_table_url(table_name)
-    resp = requests.post(url, headers=HEADERS, json=payload, timeout=15)
+    # En v3 se envuelve en {"fields": {...}}
+    wrapped_payload = {"fields": payload}
+    resp = requests.post(url, headers=HEADERS, json=wrapped_payload, timeout=15)
     resp.raise_for_status()
     return resp.json()
 
@@ -96,9 +101,9 @@ def actualizar_registro(table_name: str, record_id: int, payload: dict) -> dict:
     :return: Respuesta de la API
     """
     url = _get_table_url(table_name)
-    payload_copy = payload.copy()
-    payload_copy["Id"] = record_id  # NocoDB v3 requiere el Id dentro del payload
-    resp = requests.patch(url, headers=HEADERS, json=payload_copy, timeout=15)
+    # En v3, el PATCH requiere {"id": X, "fields": {...}}
+    wrapped_payload = {"id": record_id, "fields": payload}
+    resp = requests.patch(url, headers=HEADERS, json=wrapped_payload, timeout=15)
     resp.raise_for_status()
     return resp.json()
 
