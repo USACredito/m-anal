@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  m-analisis-worker:
+    build: .
+    container_name: m-analisis-pipeline
+    restart: always
+    env_file: .env
+    volumes:
+      - ./.tmp:/app/.tmp
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"

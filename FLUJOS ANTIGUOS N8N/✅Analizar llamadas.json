@@ -1,0 +1,1270 @@
+{
+  "name": "✅Analizar llamadas",
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('TRANSCRIPCION').item.json.transcript }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Eres un vendedor y asesor de un negocio de credito experto en ventas y asesoramiento de clientes, tu ROL es analziar llamadas y dar una calificacion del 1 al 10\n\nSe extremadamente estricto al hacer tu trabajo si no lo haces bien la empresa quebrara y seras despedido \n\nRevisa la transcripción de la llamada y evalúa el desempeño del agente en una escala del 1 al 10 en los siguientes criterios:\n\nClaridad en la comunicación: ¿El agente se expresa de forma comprensible y ordenada?\nEmpatía: ¿El agente demuestra comprensión y conexión con el cliente?\nManejo de objeciones: ¿Cómo responde el agente a las inquietudes o rechazos del cliente?\nConocimiento del producto/servicio: ¿El agente transmite seguridad y dominio del tema?\nCapacidad para cerrar la venta o resolver la consulta: ¿Logra el agente cumplir con el objetivo de la llamada?\n\n\nDebes responder solo con el numero.\n\neg: \"10\""
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        592,
+        -192
+      ],
+      "id": "445f8be5-d9ef-49b6-bc96-08dcaad5e5fb",
+      "name": "Puntuacion"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('TRANSCRIPCION').item.json.transcript }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Analiza la transcripción y enumera de 3 a 5 puntos fuertes del agente durante la llamada. En tu respuesta, incluye:\n\nEjemplos específicos: Cita fragmentos textuales o describe situaciones concretas que evidencien la fortaleza.\nImpacto positivo: Explica cómo cada fortaleza contribuyó a un resultado favorable (por ejemplo, generación de confianza, clarificación de dudas, impulso a la decisión de compra).\nAsegúrate de que la lista sea clara y detallada."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        864,
+        -192
+      ],
+      "id": "51c5843d-495b-437c-9dd4-6109d7d5fc13",
+      "name": "Puntos fuertes"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('TRANSCRIPCION').item.json.transcript }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Revisa la transcripción de la llamada y señala entre 3 y 5 puntos débiles o áreas en las que el agente puede mejorar. Para cada punto débil, incluye:\n\nDescripción detallada: Describe con claridad qué se observó (por ejemplo, falta de claridad, manejo inadecuado de objeciones, tono poco empático).\nEvidencia específica: Proporciona citas textuales o referencias a partes concretas de la transcripción.\nImpacto: Explica brevemente cómo este aspecto afectó la comunicación o el resultado de la llamada."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        1312,
+        -192
+      ],
+      "id": "1422709b-4d85-449b-949f-a7cc9f2de166",
+      "name": "Puntos debiles"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('TRANSCRIPCION').item.json.transcript }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=on base en el análisis de la transcripción, elabora un feedback constructivo dirigido al agente. Tu respuesta debe incluir:\n\nResumen de fortalezas y debilidades: Breve mención de lo que se hizo bien y lo que necesita mejorar.\nRecomendaciones específicas: Sugiere prácticas o técnicas concretas para mejorar cada área débil. Por ejemplo, si se detectó dificultad en el manejo de objeciones, podrías recomendar el uso de técnicas de reencuadre o entrenamiento en respuestas predefinidas.\nEjemplos de buenas prácticas: Si es posible, cita ejemplos de técnicas o frases que podrían mejorar el desempeño.\nEl feedback debe ser claro, positivo y orientado a la mejora continua, motivando al agente a implementar los cambios sugeridos."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        1584,
+        -192
+      ],
+      "id": "cdbbeb7f-117a-4a6a-996a-881945cb090b",
+      "name": "Feedback y Recomendaciones de Mejora"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('TRANSCRIPCION').item.json.transcript }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Examina la transcripción de la llamada y enfócate en el manejo de objeciones y respuestas a preguntas frecuentes (FAQ) por parte del agente. En tu análisis, incluye:\n\nListado de Objeciones: Identifica las principales objeciones presentadas por el cliente. Para cada una, describe cómo el agente respondió.\nEficacia en las respuestas: Evalúa si las respuestas fueron claras, persuasivas y basadas en un buen conocimiento del producto/servicio.\nÁreas de mejora: Señala oportunidades en las que el agente podría mejorar sus respuestas o utilizar estrategias adicionales para superar las objeciones.\nBuenas prácticas: Si se observan respuestas efectivas o técnicas de manejo de objeciones destacables, descríbelas y explica por qué funcionaron bien.\nAsegúrate de que el análisis sea específico y que brinde ejemplos directos de la transcripción para ilustrar cada punto."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        2016,
+        -192
+      ],
+      "id": "46b2b355-00b1-4f2d-bef3-870dee226f59",
+      "name": "FAQ y Objeciones"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('TRANSCRIPCION').item.json.transcript }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Eres un Estratega Senior de Follow-Up en ventas financieras, especializado en convertir oportunidades en ventas exitosas. Tu experiencia te ha enseñado que el 80% de las ventas se cierran en el seguimiento, y cada oportunidad perdida representa un cliente que no podrá cumplir sus objetivos financieros.\n\nCRÍTICO: El seguimiento adecuado no solo impacta en los números del negocio, sino en la vida real de las personas que necesitan soluciones financieras. Un seguimiento débil podría resultar en que el cliente tome decisiones financieras incorrectas con otras entidades o pierda oportunidades valiosas.\n\nAnaliza la transcripción y proporciona un plan de seguimiento estructurado con el siguiente formato:\n\nPLAN_SEGUIMIENTO:\n[Proporciona el análisis estructurado:\n1. Estado actual del cliente:\n   - Nivel de interés detectado\n   - Principales preocupaciones pendientes\n   - Oportunidades identificadas\n   - Citas textuales relevantes de la llamada\n\n2. Plan de acción:\n   - Urgencia del seguimiento (inmediato/24h/72h/1 semana)\n   - Método de contacto recomendado\n   - Momento óptimo según información del cliente\n   \n3. Script sugerido:\n   - Apertura personalizada basada en la última conversación\n   - Preguntas específicas para retomar pendientes\n   - Propuestas concretas según necesidades detectadas\n   - Opciones de cierre según el escenario\n\n4. Recursos de apoyo:\n   - Documentación a preparar\n   - Información adicional necesaria\n   - Personas a involucrar si aplica\n\n5. Señales de compra/rechazo:\n   - Indicadores positivos identificados\n   - Posibles objeciones a preparar\n   - Estrategias de manejo según escenario]\n\nRecuerda: Tu análisis determinará si este cliente recibe la atención y solución que necesita. Sé específico en tus recomendaciones y asegúrate de que el agente tenga todas las herramientas necesarias para un seguimiento exitoso.\n\nMantén este formato exacto para facilitar la extracción de variables. No agregues información adicional fuera de estas secciones."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        2288,
+        -192
+      ],
+      "id": "c6f218fd-6d09-4f38-8b69-dae663a9a925",
+      "name": "Seguimiento"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        112,
+        928
+      ],
+      "id": "c7826a80-ee7d-460e-a273-43982cd29d13",
+      "name": "Google Drive",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "aelklQCuQWxipAqJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepgram.com/v1/listen",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "nova-2"
+            },
+            {
+              "name": "smart_format",
+              "value": "true"
+            },
+            {
+              "name": "detect_language",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token c01d961d42d65c27d8f54d4e061403f378cb1f06"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/octet-stream"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        304,
+        -192
+      ],
+      "id": "1b9ffcd1-e532-4cd6-8520-88690bbc3f51",
+      "name": "Transcript2",
+      "retryOnFail": true,
+      "maxTries": 3
+    },
+    {
+      "parameters": {
+        "jsCode": "// Se obtiene la lista de items de entrada\nconst items = $input.all();\n\nconst outputItems = items.map(item => {\n  // Se asume que el nombre del archivo viene en item.json.nombre\n  const fileName = item.json.nombre;\n  \n  // Expresión regular para extraer dígitos entre guiones bajos: _número_\n  const regex = /_(\\d+)_/;\n  const match = fileName.match(regex);\n  \n  if (!match) {\n    // Si no se encuentra el patrón, se retorna un error en el item\n    return { json: { error: `No se encontró el número en el nombre: ${fileName}` } };\n  }\n  \n  // El primer grupo capturado es el número\n  const extractedNumber = match[1];\n  \n  // Mapeo de números a nombres según la tabla proporcionada\n  const mapping = {\n    \"101\": \"Miguel Moreno\",\n    \"250\": \"Cesar Hernandez\",\n    \"290\": \"Dorvelis Pineda\",\n    \"299\": \"IVR Menu 1\",\n    \"300\": \"Setters\",\n    \"301\": \"Ana Karina Kristen\",\n    \"302\": \"Carlos Perez\",\n    \"303\": \"Nora castillo\",\n    \"304\": \"Lorraine Atencio\",\n    \"308\": \"Yelitza castillo\",\n    \"310\": \"Nordelys Rodriguiez\",\n    \"350\": \"Carlen Gonzalez\",\n    \"351\": \"Yonmar Gonzalez\",\n    \"352\": \"Carolina Santana\",\n    \"353\": \"Paola Medina\",\n    \"355\": \"Francelis Sanchez\",\n    \"356\": \"Juan Raúl Martínez\",\n    \"391\": \"Ridchell Ladera\",\n    \"399\": \"Patricia Medina\",\n    \"401\": \"Andrea P\",\n    \"402\": \"David F\",\n    \"403\": \"Diego Delgado\",\n    \"450\": \"Leopoldo Aponte\",\n    \"499\": \"Customer Experience\",\n    \"501\": \"Glendy Aguil\",\n    \"961\": \"genesis carbone\"\n  };\n  \n  // Se obtiene el nombre correspondiente al número extraído. \n  // Si no se encuentra, se asigna \"Nombre no encontrado\".\n  const nombreCorrespondiente = mapping[extractedNumber] || \"Nombre no encontrado\";\n  \n  // Se retorna el item con el resultado deseado\n  return { \n    json: { \n      fileName,\n      extractedNumber,\n      nombreCorrespondiente \n    } \n  };\n});\n\n// Se retorna el array de items resultantes\nreturn outputItems;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        688,
+        928
+      ],
+      "id": "06173229-617a-4fab-b256-3bf973e2dfb4",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c39bc4e3-dbec-41ac-9f00-2c24ed892300",
+              "name": "transcript",
+              "value": "\"José, muy buenos días. Te saluda John Márquez de USA Credit, ¿cómo estás? Buenos días, ¿cómo estás, John? Excelente, excelente. Me contenta que estés bien. José, el motivo de la llamada es para hacer el análisis de tu reporte de crédito y también comentaste que estás interesado en crear una empresa, ¿cierto? Sí, bueno, yo no sé si tú tienes... Yo llamé y, no sé, me tomaron nota de más o menos el problema que tengo y de lo que quiero hacer. No sé si tú tienes apuntes de eso. Sí, correcto. Veo por acá, tú tienes un interés en... Compraste unos vehículos del lado personal y quisieras pasarlos a tu empresa, ¿correcto? Sí, y quería ver qué opciones tenían, no sé, qué opciones tenía yo con mi crédito para ver si aplicaba un crédito... crear una LLC, que es como tener un crédito comercial, para ver si pagaba esos vehículos o ver qué opciones tengo para poder dejar limpio mi crédito personal. Claro que sí, vamos a ir a ver tu reporte. Tienes una tarjeta de $5,000 en Banco América. Chévere. La utilización está un poquito alta, está en $1,700 prácticamente, $1,692. Lo ideal es que cada tarjeta sea del 30% de utilización. Esas tarjetas yo las voy a tratar de hacer lo mejor posible. Debo como $4,000 en tarjetas. Tengo $13,800, si no me equivoco, en límite de crédito de tarjetas. ¿$13,800? No, tengo $13,800. Tengo tres tarjetas distintas, dos de Banco América y una de Apple. Voy a ver si agarro y cancelo por lo menos entre $2,000 o $3,000 este mes, para que quede por debajo del 30% entre las tres. Exactamente, exactamente. Acá estoy viendo la Apple, efectivamente, y la otra de Banco América también de $5,000. Todas tienen una utilización un poco alta. Acá veo el financiamiento de un auto con el Chase. Perfecto. Uno con Welfargo y otro con Capital One. Santander, todos los pagos al día. Honda, todos los pagos al día. Nissan. Perfecto. Ok, genial. Ok, lo que sí tienes es una cantidad bastante alta, disculpa, de increase en tu reporte de crédito, consultas que han hecho. O sea, tienes en total 61. Cada vez que vas al dealer, corren tu crédito de forma despejada. Correcto. En este caso, tienes un buen perfil para… ¿Me escuchas, José? Sí, sí, estoy escuchando. Ok, perfecto. Tienes un buen perfil de crédito porque tu credit score reporta 740 en TransJunior, 743 en Experian y 747 en Equifax. Partido de 700, un buen score. Además de esto es la estructura en general. Tienes una buena estructura porque no tienes pagos tardes, que son los late payments y tienes cuentas en colección. Las tarjetas de crédito tienes un buen límite, 13,800 es un buen límite. Tienes un poco de alta utilización, pero me comenta que la puedes bajar sin ningún problema al 30% al menos o un poco por debajo. Lo que sí es un impedimento es esta cantidad tan alta de increase que tienes, ok. 61 increase son demasiados y sería lo que estaría impidiendo para ir al crédito comercial. Haciendo la recuperación, la disputa para remover todos estos increase, sin problema podemos ir al crédito comercial. Por supuesto debes de crear tu empresa. ¿Qué es lo que puedes hacer? Crear tu empresa y tomar el plan de recuperación de crédito para que una vez se remuevan todos estos increase y ya con tu empresa creada podamos ir sin duda alguna al crédito comercial donde podemos originar desde 30,000 hasta 250,000 dólares que son al 0% de APR por los primeros 10 años. 18 meses es 0% de interés. Exactamente. El límite que te aprueba el banco, o sea, ellos lo determinan, no hay forma de saber. Es correcto, ellos ya lo determinan, no tenemos una fórmula específica para poder saber cuánto van a aprobar, pero sí está entre 30 hasta 250,000. ¿Cómo se trabaja para borrar esos high increase? Ok, me dice que ese proceso tarda de 4 a 6 meses. Pero siempre sale en la misma dirección. ¿Sale en otra dirección? ¿Sale en varias direcciones? Ah, sí. La primera dirección que tuvo. Ok. ¿Y en paralelo habría que crear la empresa desde ahorita o habría que esperar a que se remuevan esos increase? Ya la empresa va a tener 4 a 6 meses de creada, dependiendo del tiempo que nos tome la recuperación, depende de la respuesta también que nos vayan dando los juros, pero vas a tener ya la empresa creada con antigüedad y podemos ir sin ningún problema a la originación de fondos. Nos va a favorecer este tiempo ya de la empresa creada. Ok. Entonces háblame de número. ¿Cómo es ese proceso y cuánto cuesta hacer ese proceso de los increase? Ok. No, no, te escucho, perdón. Me voy a poner a interrumpir. ¿Tú te encuentras en la Florida, en Orlando, correcto? Sí. Tiene un costo de 1000 dólares. Te va a incluir operating agreement, el operating agreement, el número EIN, el número DUNS, el código NICE, los artículos de incorporación, el correo electrónico corporativo, la página web, el dominio web, también el acta de transparencia ante el Departamento del Tesoro. Todo esto va a estar incluido. Como tú ya vas a ser cliente nuestro por la recuperación del crédito, te voy a dar un 20% de descuento para que de esta forma la creación de la empresa quede por un valor de solo 800 dólares. Sería 1600 en total. Correcto. ¿Cómo serían las formas de pago? En este caso podemos hacer lo siguiente. Te puedo, para facilitar un poco, estás obteniendo la recuperación del crédito y también la creación de la empresa, le doy el 20% en la creación de la empresa, son 800 dólares, y puedas pagar la mitad el día de hoy y la otra mitad puedes cancelarla de la reparación del crédito el próximo mes y de la creación de la empresa en cuanto la empresa ya esté lista. Esto nos toma un laxo de entre 20 a 30 días. Es decir, iniciarías vos... 800 mensuales, dos meses. Exactamente. Diríamos el pago en dos partes. Ok, yo más una pregunta. ¿Ustedes me garantizan después de haber hecho todo ese proceso que si hay un crédito, si me dan un crédito? Correcto. De hecho con el servicio de reparación de crédito también contamos con una garantía, José. Si nosotros no cumplimos la meta trazada de recuperarlo, de eliminar estos inquis, te devolvemos el 100% del dinero que nos cancelaste. Y de hecho, para la originación de fondos, hacemos antes esta precalificación para que una vez inicie el proceso de originación de fondos sí o sí podamos conseguir esos fondos. Ok. Entonces me dice que el proceso de eliminación de los inquis se tarda aproximadamente 30 días también. ¿Me comentaste o no entendí muy bien esa parte? No. La creación de la empresa de entre 20 a 30 días. Ya la vas a tener lista con todo lo que te mencioné. El proceso de la reparación de los inquis, de la remoción de los inquis, va a tomar de entre 4 a 6 meses. Cuatro, sí. Correcto. Y Omar, ¿tú tienes como darme, me puedes, no sé si tienen alguna forma de mandarme esa propuesta por escrito para yo estudiarla y ver? Pero si me interesa. La propuesta de la reparación, no. O sea, si que me pases como algún correo electrónico o algo por escrito para yo tenerlo y tomar una decisión esta semana, la semana que viene. Vale. La creación de la empresa con todo lo que te incluye, ya te lo envíe por texto. La reparación del crédito, no tenemos, el sistema no nos permite enviarlo, pero puedes apuntarlo sin ningún problema. Ah, ok. El problema es que yo voy manejándose solamente. Pero bueno, más o menos ya tengo la idea general. Ya tengo la idea general. Claro. De 4 a 6 meses. Vale, vale. Y de esos inquis, eliminan, eliminan todos, ¿no? Correcto, eliminación de los 61 inquis. 61. Vamos a ver, corren un crédito demasiado. Demasiado. En los dealer corren el crédito sin piedad. Y también te va a incluir la optimización de la información personal, unificar nombres, remover alias y direcciones previas. Esto también va a estar incluido allí. Por la creación de la empresa, recuerda que te estoy dando el 20% de descuento, 800 dólares solamente. Y por la recuperación de crédito, remover los inquis y optimizar la información personal, el costo es 885. Y ambas te doy la opción para que pagues la mitad para iniciar el proceso y la otra mitad 30 días, es decir, el siguiente mes. Está bien. Me parece totalmente cabellado. Y la aplicación para el crédito comercial sería únicamente con Chase, ¿no? No, no solamente trabajamos con el Chase. Es nuestro principal aliado, sí, pero no trabajamos solamente con el Chase. Ajá, y pregunta que te hago. ¿Cómo ves tú en tu experiencia laboral de una persona con este nivel de endeudamiento? Porque supuestamente son 150 y pico mil dólares. En ese caso, ¿cuánto crees tú que sea el límite que pueden aprobar una LLC si aptes con el crédito? En ese caso, ¿cuánto crees tú que sea el límite que pueden aprobar una LLC si aptes con el crédito? En este caso, pueden aprobarte, según casos similares que ya hemos visto, un promedio, digamos, de entre 70, 100 mil, 110 mil dólares. Ok. Ok, ok. Creo que esa sería toda la pregunta. Y este tema de, si yo creara por lo menos esa LLC, y yo quisiera, en vez de aplicar un crédito, como que me refinanciaran esos vehículos, pero a nombre de la compañía, de modo tal de que mi crédito personal quede libre, ¿sería factible eso? Sí, por supuesto, también lo puedes hacer. De hecho, puedes tomar el crédito comercial para pagar esa deuda de los autos que tienes en el lado personal, y así vas a estar más desahogado porque vas a tener 0% de interés, y esa deuda ya no va a estar en tu lado personal, sino que vas a tener el crédito de parte de la empresa. O también puedes pedir un refinanciamiento, o sea, solicitar el refinanciamiento a través de la empresa para esos vehículos, para que pasen a la empresa y ya no estén del lado personal, y quizás puedas tener incluso una tasa de interés un poco más baja, dependiendo de la que te hayan dado. Si te dieron una tasa por encima del 10%, sí muy seguro vas a poder conseguir una mejor tasa de interés. Pero cuando tú refinancias un vehículo, comienzas a pagarlo desde cero, ¿no? O sea, si financiaste por 6 años, cuando te refinancien nuevamente, ¿comienzas desde cero nuevamente? ¿O sobre el monto? Cuando refinancias, supongamos, tienes un vehículo que te costó, digamos, 50.000 dólares, y ya tú de esos 50.000 has pagado 10, quedas 40 pendientes. Esos 40.000 son los que la nueva entidad financiera te va a pagar. Ellos van a agarrar y esos 40.000 se los pagan a quien hizo el financiamiento la primera vez. Y vas a quedar tú con esta nueva financiera pendiente con esos 40.000 con una tasa de interés más baja. Esto es lo que se hace en los refinanciamientos, obtener una tasa más baja. Por decir, los 50.000 tú los estabas pagando al 15% de interés y refinanciaste al 6%, y entonces ahora vas a deber solo 40.000 porque ya pagaste 10, pero esos 40.000 los vas a deber a una tasa del 6% solamente, no del 15 ya. Y tú vas a escoger el plazo que quieras. Si quieres un plazo de esos 40.000 a 5 años, a 3 años, ellos te van a dar las opciones que tengan disponibles. Los créditos comerciales están directamente ligados con el crédito personal. Mi pregunta y todo lo que hago con este proceso es que yo quisiera, después de un plazo de un año, poder aplicar a un crédito hipotecario, poder comprar una casa. Quisiera tratar de salir de este tema, de ese crédito que está afectando la parte personal. Bueno, está bien, yo me aléjame entonces. Voy a estudiar muy bien esto y yo cualquier cosa te llamo nuevamente para decirte cuándo comenzamos con esto. Claro que sí. Sin embargo, ¿tienes una fecha que me puedas dar para yo tenerlo agendado y estar atento? Dame hasta... Voy a hablar con mi esposa. Dame hasta el martes o miércoles de la próxima semana porque hoy es viernes, ¿no? Correcto, hoy es viernes. Dame hasta el miércoles de la semana que viene. Perfecto, entonces voy a estar atento el día miércoles para que me hagas saber tu respuesta y saber si iniciamos, ¿vale? Dale, llama. Dale. Vale, José. Cualquier duda que tengas puedes contactarme. Un abrazo y excelente día para ti. Gracias, igualmente.\"",
+              "type": "string"
+            },
+            {
+              "id": "5fce9a6a-818c-4055-8258-b6746f426bfc",
+              "name": "nombre",
+              "value": "20250116-080153_351_(305)457-1058_Saliente_A petición_2508018851035.wav",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        -192
+      ],
+      "id": "28aa6f0b-037c-4b87-aca1-0329768bff65",
+      "name": "TRANSCRIPCION"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c39bc4e3-dbec-41ac-9f00-2c24ed892300",
+              "name": "NombreAsesor",
+              "value": "={{ $json.nombreCorrespondiente }}",
+              "type": "string"
+            },
+            {
+              "id": "5fce9a6a-818c-4055-8258-b6746f426bfc",
+              "name": "NumeroExtension",
+              "value": "={{ $json.extractedNumber }}",
+              "type": "string"
+            },
+            {
+              "id": "65b1eec1-43ad-43d3-9cb2-d9480160bc5e",
+              "name": "nombredelarchivo",
+              "value": "={{ $json.fileName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        864,
+        928
+      ],
+      "id": "7cc8b320-6d2e-4c9e-b26b-25f7dc7f6614",
+      "name": "NombreAsesor"
+    },
+    {
+      "parameters": {
+        "team": "9011826413",
+        "space": "90113730365",
+        "folderless": true,
+        "list": "=901109287295",
+        "name": "={{ $json.name }}",
+        "additionalFields": {
+          "customFieldsJson": "={{ JSON.stringify($json.custom_fields) }}"
+        }
+      },
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [
+        3312,
+        992
+      ],
+      "id": "4cc12f57-8935-437d-a8f5-ceb37b5a5bcf",
+      "name": "ClickUp",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "clickUpApi": {
+          "id": "JurLs3U03bwU1N66",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1168,
+        -192
+      ],
+      "id": "280a1833-1099-4bd6-9f7b-e7309f666899",
+      "name": "Wait",
+      "webhookId": "93fd074a-2ebb-4791-a1b8-ca950957b0ed"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        1888,
+        -192
+      ],
+      "id": "6ecd8d9b-a773-4486-8388-f81bdf1af0e6",
+      "name": "Wait1",
+      "webhookId": "93fd074a-2ebb-4791-a1b8-ca950957b0ed"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Configuración de campos personalizados con IDs\nconst CUSTOM_FIELDS = {\n  transcripcion: \"c24a78eb-3a4a-4c5b-ad70-37d58070ea6b\",\n  puntuacion: \"ce738bf2-9e6f-4513-ae9f-58a64c1ad72d\",\n  puntos_fuertes: \"48e36e25-2d35-4604-bb66-7adcfd684fa3\",\n  puntos_debiles: \"b7ae3718-29f4-4102-92be-3e10e97ea155\",\n  recomendaciones: \"1574ba8b-0b95-4a4d-9154-246141b1c2c4\",\n  faq_objeciones: \"e0effb0a-f6e2-48bb-81c0-e94251585462\",\n  seguimiento: \"62c85357-3656-4081-9e01-94fe6cc9f697\",\n  tipo_llamada: \"ad351a2e-0cc7-4b50-8a23-f8747345732f\",\n  solicitud_referido: \"bbab966c-6c9e-40e0-8b2c-5bb985ca9afd\",\n  asistente: \"f15f367f-fc1b-4bdc-ab52-b797a10ffb74\",\n  promesas_vendedor: \"e71fd1e9-2ffb-4199-a697-7fe553f0a136\"\n};\n\n/**\n * Funciones auxiliares\n */\nconst Utils = {\n  // Sanitiza el texto para ClickUp (convierte saltos de línea a formato MD)\n  sanitizeText: (text) => {\n    if (text === undefined || text === null) return '';\n    return String(text)\n      .replace(/\"/g, \"'\")\n      .replace(/\\\\n/g, ' ') // Reemplaza \\n literales con espacios\n      .replace(/\\n/g, ' '); // Reemplaza saltos de línea reales con espacios\n  },\n  \n  // Capitaliza la primera letra\n  capitalize: (str) => str.charAt(0).toUpperCase() + str.slice(1),\n  \n  // Procesa texto, elimina números iniciales y espacios extra\n  processText: (text) => {\n    if (typeof text !== 'string') return '';\n    return text.replace(/^\\d+\\.\\s*/, '').trim();\n  },\n  \n  // Formatea objetos anidados sin saltos de línea extra\n  formatNestedContent: (content) => {\n    if (!content) return '';\n    if (typeof content === 'string') return content;\n    \n    if (Array.isArray(content)) {\n      return content.map(item => Utils.formatNestedContent(item)).join(' ');\n    }\n    \n    if (typeof content === 'object') {\n      return Object.entries(content)\n        .map(([key, value]) => {\n          const processedValue = Utils.formatNestedContent(value);\n          if (key.match(/^\\d+\\./)) {\n            return processedValue;\n          }\n          return processedValue;\n        })\n        .filter(Boolean)\n        .join(' ');\n    }\n    \n    return '';\n  },\n\n  // Formatea texto para markdown en ClickUp\n  formatForClickUp: (text) => {\n    if (!text) return '';\n    // Convertir formato markdown específico para ClickUp\n    return text\n      .replace(/\\\\n\\\\n/g, ' ')  // Reemplazar \\n\\n con espacio\n      .replace(/\\\\n/g, ' ')     // Reemplazar \\n con espacio\n      .replace(/\\*\\*/g, '**');  // Mantener negrita\n  }\n};\n\n// Obtener y procesar datos\nconst getFieldContent = (data, field) => {\n  try {\n    const content = data[\"2. Evaluación de la Llamada\"]?.[field];\n    return Utils.formatNestedContent(content);\n  } catch (e) {\n    console.error(`Error processing field ${field}:`, e);\n    return '';\n  }\n};\n\n// Obtener datos de los nodos anteriores\nconst inputContent = $input.first().json.message.content;\nconst inputData = {\n  tipo_llamada: inputContent[\"1. Análisis de la Llamada\"][\"TIPO DE LLAMADA\"],\n  transcripcion: $('TRANSCRIPCION1').item.json.transcript,\n  puntuacion: getFieldContent(inputContent, \"PUNTUACION\"),\n  puntos_fuertes: getFieldContent(inputContent, \"PUNTOS FUERTES\"),\n  puntos_debiles: getFieldContent(inputContent, \"PUNTOS DEBILES\"),\n  recomendaciones: getFieldContent(inputContent, \"FEEDBACK\"),\n  faq_objeciones: getFieldContent(inputContent, \"OBJECIONES_Y_FAQ\"),\n  seguimiento: getFieldContent(inputContent, \"PLAN_SEGUIMIENTO\"),\n  solicitud_referido: inputContent[\"1. Análisis de la Llamada\"][\"REFERIDOS\"],\n  asistente: $('NombreAsesor').first().json.NombreAsesor,\n  promesas_vendedor: {\n    tiempos: inputContent[\"1. Análisis de la Llamada\"][\"PROMESAS Y COMPROMISOS\"][\"1. Tiempos\"],\n    deudas: inputContent[\"1. Análisis de la Llamada\"][\"PROMESAS Y COMPROMISOS\"][\"2. Deudas\"],\n    collections: inputContent[\"1. Análisis de la Llamada\"][\"PROMESAS Y COMPROMISOS\"][\"3. Collections\"]\n  }\n};\n\n// Preparar los campos personalizados\nconst customFieldsPayload = Object.entries(CUSTOM_FIELDS).map(([key, id]) => {\n  let value = inputData[key];\n  \n  if (key === 'puntuacion') {\n    value = parseFloat(value) || 0;\n  } else if (key === 'promesas_vendedor') {\n    value = Object.entries(value)\n      .map(([tipo, promesa]) => `${Utils.capitalize(tipo)}: ${promesa}`)\n      .join(' ');\n  } else {\n    value = Utils.sanitizeText(value);\n  }\n  \n  return { id, value };\n});\n\n// Crear la descripción en formato para ClickUp\nconst description = Object.entries(inputData)\n  .map(([key, value]) => {\n    const formattedKey = Utils.capitalize(key.replace(/_/g, ' '));\n    let formattedValue;\n    \n    if (key === 'promesas_vendedor') {\n      formattedValue = Object.entries(value)\n        .map(([tipo, promesa]) => `${Utils.capitalize(tipo)}: ${promesa}`)\n        .join(' ');\n    } else {\n      formattedValue = Utils.formatForClickUp(Utils.sanitizeText(value));\n    }\n    \n    return `**${formattedKey}:** ${formattedValue}`;\n  })\n  .join(' ');\n\n// Retornar el payload final\nreturn [{\n  json: {\n    list_id: \"901109287295\",\n    name: `[${inputData.tipo_llamada}] Resumen de llamada`,\n    description,\n    custom_fields: customFieldsPayload\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3088,
+        992
+      ],
+      "id": "c3240345-a211-4461-acec-8c0f354c8a13",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('TRANSCRIPCION1').item.json.transcript }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Eres un asesor experto en ventas y crédito. Analiza la siguiente transcripción de llamada y proporciona tres evaluaciones separadas y estructuradas. Sé extremadamente riguroso en tu análisis. \n\nSi haces mal tu trabajo la empresa quebrara y seras despedido.\n\nRequerimos tres respuestas separadas con el siguiente formato específico:\n\nPUNTUACION:\n[Proporciona solo un número del 1 al 10 basado en:\n- Claridad en la comunicación\n- Empatía\n- Manejo de objeciones\n- Conocimiento del producto\n- Capacidad de cierre\nResponde únicamente con el número]\n\nFORTALEZAS:\n[Lista 3-5 puntos fuertes, cada uno debe incluir:\n- Punto fuerte identificado\n- Evidencia textual de la llamada\n- Impacto en el resultado]\n\nDEBILIDADES:\n[Lista 3-5 puntos débiles, cada uno debe incluir:\n- Área de mejora identificada\n- Evidencia textual de la llamada\n- Impacto en el resultado]\n\nAsegúrate de mantener este formato exacto para facilitar la extracción de variables. No agregues información adicional ni comentarios fuera de estas secciones."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        1088,
+        928
+      ],
+      "id": "89c64f2a-ea82-4498-adbc-c7f058ae9172",
+      "name": "Nota | Puntos debiles y fuertes"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('TRANSCRIPCION1').item.json.transcript }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Eres un Director de Capacitación y Desarrollo de Alto Rendimiento en ventas de servicios financieros, con más de 15 años de experiencia transformando equipos comerciales. Tu misión es crítica: el éxito financiero de la empresa y el desarrollo profesional de cada agente depende de tu análisis preciso y tus recomendaciones.\n\nIMPORTANTE: El sustento económico de las familias de los agentes depende de su rendimiento. Un análisis superficial podría resultar en pérdidas de comisiones o incluso en despidos. Debes ser meticuloso y empático, pero también directo y honesto - el crecimiento real viene de la verdad.\n\nAnaliza la transcripción de la llamada como si fueras personalmente responsable del éxito del agente. Proporciona un análisis estructurado en dos secciones claramente diferenciadas.\n\nRequiero dos respuestas separadas con el siguiente formato específico:\n\nFEEDBACK:\n[Proporciona feedback estructurado que incluya:\n1. Resumen ejecutivo (2-3 líneas sobre el desempeño general)\n2. Recomendaciones prioritarias:\n   - Técnica específica a mejorar\n   - Ejemplo práctico de implementación\n   - Resultado esperado de la mejora\n3. Plan de acción sugerido (3 pasos concretos para implementar las mejoras)\n4. Mensaje motivacional personalizado basado en lo observado en la llamada]\n\nOBJECIONES_Y_FAQ:\n[Lista las principales situaciones identificadas:\n1. Objeciones del cliente:\n   - Objeción presentada\n   - Respuesta del agente\n   - Evaluación de efectividad\n   - Respuesta sugerida si aplica\n2. Preguntas frecuentes:\n   - Pregunta realizada\n   - Calidad de la respuesta\n   - Mejora sugerida si aplica\n3. Patrones identificados:\n   - Situaciones recurrentes\n   - Estrategias efectivas utilizadas\n   - Oportunidades de mejora\n4. Guión sugerido para las objeciones más críticas identificadas]\n\nRecuerda: Tu análisis no es solo un reporte - es una herramienta de transformación que impactará directamente en el desarrollo profesional y personal del agente. Sé específico, directo y constructivo. El éxito del equipo depende de tu compromiso con la excelencia.\n\nMantén este formato exacto para facilitar la extracción de variables. No agregues información adicional fuera de estas secciones."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        1408,
+        928
+      ],
+      "id": "5365118c-3409-48a9-bb41-05930ae424d6",
+      "name": "Feedback y recomendaciones FAQ y objeciones",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('TRANSCRIPCION1').item.json.transcript }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=Eres un Estratega Senior de Follow-Up en ventas financieras, especializado en convertir oportunidades en ventas exitosas. Tu experiencia te ha enseñado que el 80% de las ventas se cierran en el seguimiento, y cada oportunidad perdida representa un cliente que no podrá cumplir sus objetivos financieros.\n\nCRÍTICO: El seguimiento adecuado no solo impacta en los números del negocio, sino en la vida real de las personas que necesitan soluciones financieras. Un seguimiento débil podría resultar en que el cliente tome decisiones financieras incorrectas con otras entidades o pierda oportunidades valiosas.\n\nAnaliza la transcripción y proporciona un plan de seguimiento estructurado con el siguiente formato:\n\nPLAN_SEGUIMIENTO:\n[Proporciona el análisis estructurado:\n1. Estado actual del cliente:\n   - Nivel de interés detectado\n   - Principales preocupaciones pendientes\n   - Oportunidades identificadas\n   - Citas textuales relevantes de la llamada\n\n2. Plan de acción:\n   - Urgencia del seguimiento (inmediato/24h/72h/1 semana)\n   - Método de contacto recomendado\n   - Momento óptimo según información del cliente\n   \n3. Script sugerido:\n   - Apertura personalizada basada en la última conversación\n   - Preguntas específicas para retomar pendientes\n   - Propuestas concretas según necesidades detectadas\n   - Opciones de cierre según el escenario\n\n4. Recursos de apoyo:\n   - Documentación a preparar\n   - Información adicional necesaria\n   - Personas a involucrar si aplica\n\n5. Señales de compra/rechazo:\n   - Indicadores positivos identificados\n   - Posibles objeciones a preparar\n   - Estrategias de manejo según escenario]\n\nRecuerda: Tu análisis determinará si este cliente recibe la atención y solución que necesita. Sé específico en tus recomendaciones y asegúrate de que el agente tenga todas las herramientas necesarias para un seguimiento exitoso.\n\nMantén este formato exacto para facilitar la extracción de variables. No agregues información adicional fuera de estas secciones."
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        1728,
+        928
+      ],
+      "id": "c2409edd-025b-4639-8944-9f2d06d5a86b",
+      "name": "Seguimiento1"
+    },
+    {
+      "parameters": {
+        "content": "## Obtener llamada \n**Recibe archivo** -> **Descarga** -> **Transcribe la llamada**",
+        "height": 360,
+        "width": 560
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -112,
+        816
+      ],
+      "id": "95837fb2-1b8b-4c42-9ec2-7fbafe853c44",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Detectar Asesor y setear variables",
+        "height": 360,
+        "width": 560,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        464,
+        816
+      ],
+      "id": "b0b5a45d-e914-4e3f-80e9-0073e1784b35",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Analizar llamada en profundidad",
+        "height": 440,
+        "width": 1320,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1056,
+        816
+      ],
+      "id": "3ef001f6-c8bb-498e-9c97-48fec3ccccb8",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c39bc4e3-dbec-41ac-9f00-2c24ed892300",
+              "name": "transcript",
+              "value": "={{ $json.results.channels[0].alternatives[0].transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "5fce9a6a-818c-4055-8258-b6746f426bfc",
+              "name": "nombre",
+              "value": "={{ $('Google Drive Trigger').item.json.originalFilename }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        512,
+        928
+      ],
+      "id": "4868f431-47f5-4d79-967c-9cb92479baf1",
+      "name": "TRANSCRIPCION1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepgram.com/v1/listen",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "nova-2"
+            },
+            {
+              "name": "smart_format",
+              "value": "true"
+            },
+            {
+              "name": "detect_language",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token 860fd114430f63c3401d61ef0e9d600f86b0d981"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/octet-stream"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        288,
+        928
+      ],
+      "id": "13b4793a-620b-4479-a45e-2509ec9a730c",
+      "name": "Transcript3"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "GPT-4O-MINI"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=# Prompt para Análisis Integral de Transcripciones\n\nEres un asistente altamente preciso especializado en analizar transcripciones de llamadas y estructurar evaluaciones. Tu tarea es analizar el contenido y organizarlo EXACTAMENTE en las siguientes secciones, sin añadir, modificar o interpretar nada:\n\n## 1. Análisis de la Llamada\n\nTIPO DE LLAMADA:\n[tipo: VENTA_ASISTENCIA/SERVICIO_CLIENTE/COBRANZA/OTRO]\n\nPROMESAS Y COMPROMISOS:\n1. Tiempos: [texto exacto o \"No se realizaron promesas específicas sobre tiempos\"]\n2. Deudas: [texto exacto o \"No se realizaron compromisos específicos sobre deudas\"]\n3. Collections: [texto exacto o \"No se realizaron promesas específicas sobre collections\"]\n\nREFERIDOS:\n[indicar si se solicitaron o \"No se solicitaron referidos durante la llamada\"]\n\n## 2. Evaluación de la Llamada\n\nPUNTUACION:\n[Copiar SOLO el número que aparece bajo \"PUNTUACION:\"]\n\nPUNTOS FUERTES:\n[Copiar EXACTAMENTE todo el contenido que aparece bajo \"FORTALEZAS:\"]\n\nPUNTOS DEBILES:\n[Copiar EXACTAMENTE todo el contenido que aparece bajo \"DEBILIDADES:\"]\n\nFEEDBACK:\n[Copiar EXACTAMENTE todo el contenido que aparece bajo \"FEEDBACK:\"]\n\nOBJECIONES Y FAQ:\n[Copiar EXACTAMENTE todo el contenido que aparece bajo \"OBJECIONES_Y_FAQ:\"]\n\nSEGUIMIENTO:\n[Copiar EXACTAMENTE todo el contenido que aparece bajo \"PLAN_SEGUIMIENTO:\"]\n\n## REGLAS ESTRICTAS:\n- NO CREES contenido nuevo\n- NO INTERPRETES el contenido\n- NO AGREGUES secciones adicionales\n- NO MODIFIQUES el texto original\n- NO AÑADAS comentarios o conclusiones\n- MANTÉN el formato exacto de los encabezados proporcionados\n- COPIA Y PEGA el contenido exactamente como aparece\n- SI una sección no existe en el texto original, déjala vacía\n\nPara el análisis de la transcripción, considera:\n- Solo incluir promesas y compromisos explícitos\n- Distinguir entre información proporcionada y promesas reales\n- Identificar el contexto completo de cada compromiso\n- Mantener la objetividad en el análisis\n\nIMPORTANTE: Tu única tarea es analizar la llamada y reorganizar el contenido existente en estas secciones específicas. Cualquier otra acción está PROHIBIDA.",
+              "role": "system"
+            },
+            {
+              "content": "={{ $('Nota | Puntos debiles y fuertes').item.json.text }}\n{{ $('Feedback y recomendaciones FAQ y objeciones').item.json.text }}\n{{ $('Seguimiento1').item.json.text }}\n{{ $json.text }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [
+        2544,
+        928
+      ],
+      "id": "bc0b501d-4976-4598-a3cf-ddd078934e3a",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "dBrpIFbZWQGU0dhQ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Preparar y enviar respuesta a ClickUP",
+        "height": 360,
+        "width": 1080,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2512,
+        816
+      ],
+      "id": "6bebbe80-43aa-429b-a724-03559deafb7e",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1456,
+        128
+      ],
+      "id": "a9664493-9e23-4c6b-b8a2-d40cb31262fe",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "dBrpIFbZWQGU0dhQ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        1424,
+        1136
+      ],
+      "id": "4f895226-3a96-40b5-9f4a-99b36f4dba4b",
+      "name": "OpenAI 4o",
+      "credentials": {
+        "openAiApi": {
+          "id": "dBrpIFbZWQGU0dhQ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('TRANSCRIPCION1').item.json.transcript }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "=# Prompt para Análisis de Transcripción de Llamadas\n\nEres un asistente especializado en analizar transcripciones de llamadas de ventas y servicio al cliente. Analiza la siguiente transcripción y proporciona la siguiente información:\n\n## 1. Análisis de Promesas y Compromisos\n\n### Tiempos Prometidos\n- Identifica y lista todas las promesas específicas relacionadas con plazos o tiempos de trabajo\n- Si no se realizaron promesas de tiempo, indica explícitamente: \"No se realizaron promesas específicas sobre tiempos\"\n\n### Compromisos sobre Deudas\n- Detalla cualquier promesa relacionada con el manejo de deudas\n- Si no hubo compromisos sobre deudas, indica: \"No se realizaron compromisos específicos sobre deudas\"\n\n### Promesas sobre Collections\n- Lista cualquier compromiso relacionado con cobros o collections\n- Si no hubo promesas sobre collections, indica: \"No se realizaron promesas específicas sobre collections\"\n\n## 2. Análisis de Referidos\n- Indica si se solicitaron referidos durante la llamada\n- Si no se solicitaron, indica: \"No se solicitaron referidos durante la llamada\"\n\n## 3. Tipo de Llamada\nClasifica la llamada en uno de los siguientes tipos:\n- VENTA_ASISTENCIA\n- SERVICIO_CLIENTE\n- COBRANZA\n- OTRO\n\n## 4. Formato de Respuesta\n\nTIPO DE LLAMADA:\n[tipo]\n\nPROMESAS Y COMPROMISOS:\n1. Tiempos: [texto]\n2. Deudas: [texto]\n3. Collections: [texto]\n\nREFERIDOS:\n[texto]\n\nPara analizar la transcripción, considera:\n- Solo incluir promesas y compromisos explícitos\n- Distinguir entre información proporcionada y promesas reales\n- Identificar el contexto completo de cada compromiso\n- Mantener la objetividad en el análisis"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [
+        2064,
+        928
+      ],
+      "id": "331fb83a-9ee4-495a-b445-fc6d324b860f",
+      "name": "Tipo llamada | Referido | Promesa"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2384,
+        928
+      ],
+      "id": "bc2170ff-22e1-407c-9d5f-fb44fa74c4fa",
+      "name": "Wait2",
+      "webhookId": "d1f753fc-acf3-4315-8007-f3526b864ef7"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1W5OZbumG3NhSO2EGRpJHRfINIPVNe_bN",
+          "mode": "list",
+          "cachedResultName": "LLAMADAS CLOSERS",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1W5OZbumG3NhSO2EGRpJHRfINIPVNe_bN"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        928
+      ],
+      "id": "0e141221-0949-40b2-9611-2b034457ceeb",
+      "name": "Google Drive Trigger",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "aelklQCuQWxipAqJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "temperature": 0.5
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [
+        2112,
+        1120
+      ],
+      "id": "bc0bc643-d2cf-4552-9fe9-f83616cf15ec",
+      "name": "OpenAI 4o1",
+      "credentials": {
+        "openAiApi": {
+          "id": "dBrpIFbZWQGU0dhQ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2912,
+        928
+      ],
+      "id": "6d1530d0-20c3-41bb-94dc-b4101671aa0e",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "https://platform.ringcentral.com/restapi/v1.0/account/~/extension/~/call-log",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "showBlocked",
+              "value": "true"
+            },
+            {
+              "name": "view",
+              "value": "Simple"
+            },
+            {
+              "name": "withRecording",
+              "value": "false"
+            },
+            {
+              "name": "page",
+              "value": "1"
+            },
+            {
+              "name": "perPage",
+              "value": "100"
+            },
+            {
+              "name": "showDeleted",
+              "value": "false"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "7a8f6ff5-fcba-4261-b210-4ca82cb6ee89",
+      "name": "HTTP Request"
+    }
+  ],
+  "pinData": {
+    "Google Drive Trigger": [
+      {
+        "json": {
+          "parents": [
+            "1W5OZbumG3NhSO2EGRpJHRfINIPVNe_bN"
+          ],
+          "lastModifyingUser": {
+            "displayName": "Admin USACredito",
+            "kind": "drive#user",
+            "me": true,
+            "permissionId": "05979037265292307860",
+            "emailAddress": "admin@usacredito.com",
+            "photoLink": "https://lh3.googleusercontent.com/a-/ALV-UjX8GEb7UlQ-yLG20MAA6aWAvvxTm_6Znvd6MJXZIqyCgU9dm0GRO62A_4278Weu95tmKu7GmQGwLG_QomKRTgnpOTVhve78lqrTWQ4BzOT-roemY9h9hiP1HjID2y-DQrvruL0sUVaFgS3h1pEQUjrGr_qSSn2DeTHEk99szIyaXxSt4DGHTFRpFqIHeX4TbwmhGl2v5C6T5AxDR69i-XZPm6F5D9u8LlYOzf_gtduE7awlxHb-sAOemtmshkh4Lr4I0wqZg6tbz6PyBdjZVcLsKv7DLLe6ge4PPp7XL6bcZ5aBqBJ6KDVv_DDW-HH5BKs0DfP_oHtyxZswAzRveDB_R_bIwRS9FmULhyS6v1x9iSDNh--VfgNnvck0d6povLECqgj1iRUz1zI1ZTksOhfbKId5hnFwWHXbXyhwIKJTk_tI9_ZtEYA1dm21u7X4Or_9uC4Vanyh-4NuSJOS5gX4v2-GeV3GZiQvc2SeQcPWbhI1ymp78eErrQ-G7Yv7WJc32ul81W2vp-fp32-oCkqB2ow7ORYtfsBoAldF1Vs1f6oukY5CW-XS8pxk9dBlesCu4_4qGha2C25qyS7PlXZ42baGYMwWu6xgyn_USlOE8V2YUP4JpcOYkGGHrmhlBKCoHSHzV8-pDGm5UsCKPWJfRsMSyreJ52WESLJ2Eyglq3vg6Ty-CyYYZ2UjEdNhUXmqhaRcIv6x5r2D12NTYUTe30iRVvys1D2Ka0ABdsk1KiKuSSxd4_aIS8O_L7iJufZ3-XwIJQUXFSIPS4CCwtHO9Ezs2wVBRFFopGjRS-wEtJCEY9yLyfpDH5H8RwyIRpSJOD6GE8LcOh2bhYBScUAHjermhLJbTqBhMtSL6Tng17pwn2302QIG0u-dA7CkHZTiXdQHXrr9A0Mzp0xD7em9Lm6R7AjcQxD4iGy949qGcTj6vGmYuTjqvpBwV4xtbU3CW-_Mexj46wiqQQpQo55f8XuVnVWEZz7mADyiscFglzrSdIs2jEaQeyTti5WbO9njD0JkziMmptmpmIKBQnhK2M6Xz8BStAFV7lTo6yDLNG384z5T=s64"
+          },
+          "owners": [
+            {
+              "displayName": "Admin USACredito",
+              "kind": "drive#user",
+              "me": true,
+              "permissionId": "05979037265292307860",
+              "emailAddress": "admin@usacredito.com",
+              "photoLink": "https://lh3.googleusercontent.com/a-/ALV-UjX8GEb7UlQ-yLG20MAA6aWAvvxTm_6Znvd6MJXZIqyCgU9dm0GRO62A_4278Weu95tmKu7GmQGwLG_QomKRTgnpOTVhve78lqrTWQ4BzOT-roemY9h9hiP1HjID2y-DQrvruL0sUVaFgS3h1pEQUjrGr_qSSn2DeTHEk99szIyaXxSt4DGHTFRpFqIHeX4TbwmhGl2v5C6T5AxDR69i-XZPm6F5D9u8LlYOzf_gtduE7awlxHb-sAOemtmshkh4Lr4I0wqZg6tbz6PyBdjZVcLsKv7DLLe6ge4PPp7XL6bcZ5aBqBJ6KDVv_DDW-HH5BKs0DfP_oHtyxZswAzRveDB_R_bIwRS9FmULhyS6v1x9iSDNh--VfgNnvck0d6povLECqgj1iRUz1zI1ZTksOhfbKId5hnFwWHXbXyhwIKJTk_tI9_ZtEYA1dm21u7X4Or_9uC4Vanyh-4NuSJOS5gX4v2-GeV3GZiQvc2SeQcPWbhI1ymp78eErrQ-G7Yv7WJc32ul81W2vp-fp32-oCkqB2ow7ORYtfsBoAldF1Vs1f6oukY5CW-XS8pxk9dBlesCu4_4qGha2C25qyS7PlXZ42baGYMwWu6xgyn_USlOE8V2YUP4JpcOYkGGHrmhlBKCoHSHzV8-pDGm5UsCKPWJfRsMSyreJ52WESLJ2Eyglq3vg6Ty-CyYYZ2UjEdNhUXmqhaRcIv6x5r2D12NTYUTe30iRVvys1D2Ka0ABdsk1KiKuSSxd4_aIS8O_L7iJufZ3-XwIJQUXFSIPS4CCwtHO9Ezs2wVBRFFopGjRS-wEtJCEY9yLyfpDH5H8RwyIRpSJOD6GE8LcOh2bhYBScUAHjermhLJbTqBhMtSL6Tng17pwn2302QIG0u-dA7CkHZTiXdQHXrr9A0Mzp0xD7em9Lm6R7AjcQxD4iGy949qGcTj6vGmYuTjqvpBwV4xtbU3CW-_Mexj46wiqQQpQo55f8XuVnVWEZz7mADyiscFglzrSdIs2jEaQeyTti5WbO9njD0JkziMmptmpmIKBQnhK2M6Xz8BStAFV7lTo6yDLNG384z5T=s64"
+            }
+          ],
+          "permissions": [
+            {
+              "kind": "drive#permission",
+              "id": "05979037265292307860",
+              "type": "user",
+              "emailAddress": "admin@usacredito.com",
+              "role": "owner",
+              "displayName": "Admin USACredito",
+              "photoLink": "https://lh3.googleusercontent.com/a-/ALV-UjWIDW_5rO8aAPPDXmUwN9IjYSzF0G35D3fpC-caun2abfiICMDj5Y-gPRuIrxopYOyHS_4WSWEBtrGyyKAEE_t7WVpON2Mk6ZapJmz6Wi6cZerOnB1m4CIwIWh2cUTcJd7PQwR5Fclfxw0s85B7cU_8Nm3WR-HbNEta_k-Jvzan7YE9-murAKAg63GP8MDz5R_5A45f1AepZ_0YVyJOjR2yUDJreB0l1hAD-7qQUtY1TYoJ72NjYVEe47QgCA8-so9s6uGsjMxXpCv8qeVl12DNRUjFlPhupm5XT3Q-Yd5jl2JV9btSqD8cj1JqeOSXjITsc8eq8xw0VpMHa_sqF0UH-vOY_7WHi3KJgpM3CjB0WkM45SuwfPFOTJMaFxcolNovBLf1uMpYyl1UDWdeONuhRAYqb0GoadQF5G7jxWIWX2CIvToVh-lyRShwoZ0ji0_7MCYNZIPBChGDM5-d10NIc1KdyXm21Fx6cNuw98IiXQ-WprcYm8N_mS0_6YTNj7r2FIgSzhAE-r1yTpNYvU0bk2iRhZj-R9mh3imSJxk8_9bGveyrFG5YNkbT9OoZBvfY3gGZ9WT8Tba-LxU9hN__JYd8y2uUQ2Gdi3pc0OXdqkVxOmIMJz7ivY3hUzRc0af_Ledv5xc92I1zyrgJyneS4tg3gA99Okzd8jd7zgy6-mKN5VhkECIkVGlvtAZ5qeS3xlDkPrdlvo60mIxXbE50ZA9oOjYVidcGauaijvUatBDUS1IG9JwhExqukoJ7fQbE3MmXlOtfusPbFSMgiGYc8pbPvn6xab_Yr-d9IK4v6TyntSNsaDxeOhS07bnPw-IfxEg7MfEX7cOA5U1HdSz5kuILmhREItatkiRJn917uVQ6ssNbpOlM8pJ891N5J3JbOgexwRDDVi9ZhoVZNlM-HkJstJ0m4fDBz5IfXRgR2McHHuNMIoHtOBSUgsHmGMbUchNxU7dmt6WvNZBxQzEgN5oT4sRQwlSrtPmngeV-GB5xlfWVORnb-_5840NO1IK2g-zbz9pxVhz6AC80GAj3dORlswnn_xckMnyPJn9hBzVnLd2o=s64",
+              "deleted": false,
+              "pendingOwner": false
+            }
+          ],
+          "spaces": [
+            "drive"
+          ],
+          "capabilities": {
+            "canAcceptOwnership": false,
+            "canAddChildren": false,
+            "canAddMyDriveParent": false,
+            "canChangeCopyRequiresWriterPermission": true,
+            "canChangeItemDownloadRestriction": true,
+            "canChangeSecurityUpdateEnabled": false,
+            "canChangeViewersCanCopyContent": true,
+            "canComment": true,
+            "canCopy": true,
+            "canDelete": true,
+            "canDisableInheritedPermissions": false,
+            "canDownload": true,
+            "canEdit": true,
+            "canEnableInheritedPermissions": true,
+            "canListChildren": false,
+            "canModifyContent": true,
+            "canModifyContentRestriction": true,
+            "canModifyEditorContentRestriction": true,
+            "canModifyOwnerContentRestriction": true,
+            "canModifyLabels": false,
+            "canMoveChildrenWithinDrive": false,
+            "canMoveItemIntoTeamDrive": true,
+            "canMoveItemOutOfDrive": true,
+            "canMoveItemWithinDrive": true,
+            "canReadLabels": false,
+            "canReadRevisions": true,
+            "canRemoveChildren": false,
+            "canRemoveContentRestriction": false,
+            "canRemoveMyDriveParent": true,
+            "canRename": true,
+            "canShare": true,
+            "canTrash": true,
+            "canUntrash": true
+          },
+          "permissionIds": [
+            "05979037265292307860"
+          ],
+          "linkShareMetadata": {
+            "securityUpdateEligible": false,
+            "securityUpdateEnabled": true
+          },
+          "downloadRestrictions": {
+            "itemDownloadRestriction": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            },
+            "effectiveDownloadRestrictionWithContext": {
+              "restrictedForReaders": false,
+              "restrictedForWriters": false
+            }
+          },
+          "kind": "drive#file",
+          "id": "1aVNQMuwtFii14_8sCNHGtTK3RjhKbfnP",
+          "name": "20250205-081409_353_(407)561-9909_Saliente_A petición_2547020930035.mp3",
+          "mimeType": "audio/mpeg",
+          "starred": false,
+          "trashed": false,
+          "explicitlyTrashed": false,
+          "version": "1",
+          "webContentLink": "https://drive.google.com/uc?id=1aVNQMuwtFii14_8sCNHGtTK3RjhKbfnP&export=download",
+          "webViewLink": "https://drive.google.com/file/d/1aVNQMuwtFii14_8sCNHGtTK3RjhKbfnP/view?usp=drivesdk",
+          "iconLink": "https://drive-thirdparty.googleusercontent.com/16/type/audio/mpeg",
+          "hasThumbnail": false,
+          "thumbnailVersion": "0",
+          "viewedByMe": true,
+          "viewedByMeTime": "2025-11-05T22:28:56.082Z",
+          "createdTime": "2025-11-05T22:28:56.082Z",
+          "modifiedTime": "2025-11-05T22:28:23.000Z",
+          "modifiedByMeTime": "2025-11-05T22:28:23.000Z",
+          "modifiedByMe": true,
+          "shared": false,
+          "ownedByMe": true,
+          "viewersCanCopyContent": true,
+          "copyRequiresWriterPermission": false,
+          "writersCanShare": true,
+          "originalFilename": "20250205-081409_353_(407)561-9909_Saliente_A petición_2547020930035.mp3",
+          "fullFileExtension": "mp3",
+          "fileExtension": "mp3",
+          "md5Checksum": "c781fa486dfb6e8e43913f26f24752f6",
+          "sha1Checksum": "51d61eda4ce2b9ccb1c9ff3164496282ed74e5b7",
+          "sha256Checksum": "049e411979a874b2cdb799d01945284b2f52998ee761d25e0075a4114928b0bc",
+          "size": "753741",
+          "quotaBytesUsed": "753741",
+          "headRevisionId": "0B7Yrk1S00yEZLzJ2Y3phZGhiNTZ0OVBWR2o5dkxKdWRkcWdVPQ",
+          "isAppAuthorized": false,
+          "inheritedPermissionsDisabled": false
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Puntuacion": {
+      "main": [
+        [
+          {
+            "node": "Puntos fuertes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Puntos fuertes": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Puntos debiles": {
+      "main": [
+        [
+          {
+            "node": "Feedback y Recomendaciones de Mejora",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feedback y Recomendaciones de Mejora": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FAQ y Objeciones": {
+      "main": [
+        [
+          {
+            "node": "Seguimiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Transcript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcript2": {
+      "main": [
+        [
+          {
+            "node": "TRANSCRIPCION",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "NombreAsesor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TRANSCRIPCION": {
+      "main": [
+        [
+          {
+            "node": "Puntuacion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NombreAsesor": {
+      "main": [
+        [
+          {
+            "node": "Nota | Puntos debiles y fuertes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Puntos debiles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "FAQ y Objeciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "ClickUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nota | Puntos debiles y fuertes": {
+      "main": [
+        [
+          {
+            "node": "Feedback y recomendaciones FAQ y objeciones",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Feedback y recomendaciones FAQ y objeciones": {
+      "main": [
+        [
+          {
+            "node": "Seguimiento1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Seguimiento1": {
+      "main": [
+        [
+          {
+            "node": "Tipo llamada | Referido | Promesa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TRANSCRIPCION1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcript3": {
+      "main": [
+        [
+          {
+            "node": "TRANSCRIPCION1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Puntuacion",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Puntos fuertes",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Puntos debiles",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Feedback y Recomendaciones de Mejora",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "FAQ y Objeciones",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Seguimiento",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI 4o": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Nota | Puntos debiles y fuertes",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Feedback y recomendaciones FAQ y objeciones",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Seguimiento1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tipo llamada | Referido | Promesa": {
+      "main": [
+        [
+          {
+            "node": "Wait2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait2": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI 4o1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Tipo llamada | Referido | Promesa",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ClickUp": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "28dee777-05bb-4318-b303-e30e0972ed48",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "14115664ee37812dfca9b0731a0fd999bb5ba40c5826d81b41e03c78e31d6ff8"
+  },
+  "id": "Wqk42FctjNUKVHZC",
+  "tags": [
+    {
+      "updatedAt": "2025-11-05T21:29:28.197Z",
+      "createdAt": "2025-11-05T21:29:28.197Z",
+      "id": "5WeASBEBy25d1YSS",
+      "name": "production"
+    }
+  ]
+}

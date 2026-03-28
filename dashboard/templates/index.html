@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Call Analysis — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">📞</div>
+    <div>
+      <div class="brand-name">CallAnalysis</div>
+      <div class="brand-sub">CEO Dashboard</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <button class="nav-item active" data-tab="metricas" onclick="switchTab('metricas', this)">
+      <span class="nav-icon">📊</span>
+      <span>Rendimiento</span>
+    </button>
+    <button class="nav-item" data-tab="agentes" onclick="switchTab('agentes', this)">
+      <span class="nav-icon">👥</span>
+      <span>Agentes</span>
+    </button>
+    <button class="nav-item" data-tab="evolucion" onclick="switchTab('evolucion', this)">
+      <span class="nav-icon">📈</span>
+      <span>Evolución</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="status-dot" id="conexionDot"></div>
+    <span id="conexionLabel">Verificando...</span>
+  </div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+  <!-- HEADER -->
+  <header class="topbar">
+    <div>
+      <h1 class="page-title" id="pageTitle">Rendimiento del Equipo</h1>
+      <p class="page-sub" id="pageSub">Semáforo de calidad · Actualizado hoy</p>
+    </div>
+    <div class="topbar-right">
+      <div class="demo-badge" id="demoBadge" style="display:none">🧪 Modo Demo</div>
+      <button class="btn-refresh" onclick="refreshData()" title="Actualizar datos">↻</button>
+    </div>
+  </header>
+
+  <!-- ═══════════════════ TAB: MÉTRICAS ═══════════════════ -->
+  <section class="tab-content active" id="tab-metricas">
+
+    <!-- KPI CARDS -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card loading-pulse">
+        <div class="kpi-icon">🟢</div>
+        <div class="kpi-val" id="kpiExcelente">—</div>
+        <div class="kpi-label">Excelentes</div>
+      </div>
+      <div class="kpi-card loading-pulse">
+        <div class="kpi-icon">🟡</div>
+        <div class="kpi-val" id="kpiRegular">—</div>
+        <div class="kpi-label">Regulares</div>
+      </div>
+      <div class="kpi-card loading-pulse">
+        <div class="kpi-icon">🔴</div>
+        <div class="kpi-val" id="kpiCritico">—</div>
+        <div class="kpi-label">Críticos</div>
+      </div>
+      <div class="kpi-card loading-pulse">
+        <div class="kpi-icon">📞</div>
+        <div class="kpi-val" id="kpiTotal">—</div>
+        <div class="kpi-label">Total Agentes</div>
+      </div>
+    </div>
+
+    <!-- FILTRO POR TIPO -->
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="todos" onclick="filtrarAgentes('todos', this)">Todos</button>
+      <button class="filter-btn" data-filter="closer" onclick="filtrarAgentes('closer', this)">Closers</button>
+      <button class="filter-btn" data-filter="soporte" onclick="filtrarAgentes('soporte', this)">Soporte</button>
+      <button class="filter-btn" data-filter="onboarding" onclick="filtrarAgentes('onboarding', this)">Onboarding</button>
+    </div>
+
+    <!-- GRID DE AGENTES CON SEMÁFORO -->
+    <div class="agents-grid" id="agentsGrid">
+      <!-- Generado por JS -->
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════ TAB: AGENTES ═══════════════════ -->
+  <section class="tab-content" id="tab-agentes">
+
+    <div class="section-header">
+      <h2 class="section-title">Gestión de Agentes</h2>
+      <button class="btn-primary" onclick="abrirModal()">+ Nuevo Agente</button>
+    </div>
+
+    <div class="table-wrap">
+      <table class="data-table" id="agentesTable">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Tipo</th>
+            <th>Email Fathom</th>
+            <th>Estado</th>
+            <th>Registrado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="agentesTableBody">
+          <tr><td colspan="6" class="loading-cell">Cargando agentes...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════ TAB: EVOLUCIÓN ═══════════════════ -->
+  <section class="tab-content" id="tab-evolucion">
+    <div class="section-header">
+      <h2 class="section-title">Curva de Mejora Mensual</h2>
+      <p style="color:var(--text-muted);font-size:13px;">Evolución de promedios de calidad por categoría</p>
+    </div>
+
+    <div class="chart-container-big">
+      <canvas id="evolucionChart"></canvas>
+    </div>
+
+    <div class="evol-legend">
+      <span class="legend-dot" style="background:#6366f1"></span> Closers &nbsp;&nbsp;
+      <span class="legend-dot" style="background:#22c55e"></span> Onboarding &nbsp;&nbsp;
+      <span class="legend-dot" style="background:#f59e0b"></span> Leads
+    </div>
+  </section>
+
+</main>
+
+<!-- ═══════════════════ MODAL AGENTE ═══════════════════ -->
+<div class="modal-overlay" id="modalOverlay" onclick="cerrarModal(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <h3 id="modalTitle">Nuevo Agente</h3>
+      <button class="modal-close" onclick="cerrarModal()">✕</button>
+    </div>
+    <form id="agenteForm" onsubmit="guardarAgente(event)">
+      <input type="hidden" id="agenteId" value="" />
+
+      <div class="form-group">
+        <label>Nombre completo *</label>
+        <input type="text" id="fNombre" placeholder="Ej: Carlos Méndez" required />
+      </div>
+      <div class="form-group">
+        <label>Tipo *</label>
+        <select id="fTipo" required>
+          <option value="closer">Closer (Ventas)</option>
+          <option value="soporte">Soporte al Cliente</option>
+          <option value="onboarding">Coach de Onboarding</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Email en Fathom</label>
+        <input type="email" id="fEmail" placeholder="email@empresa.com" />
+      </div>
+      <div class="form-group">
+        <label class="toggle-label">
+          <input type="checkbox" id="fActivo" checked />
+          <span class="toggle-text">Activo (incluir en reportes)</span>
+        </label>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
+        <button type="submit" class="btn-primary" id="btnGuardar">Guardar Agente</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════ MODAL DETALLE AGENTE ═══════════════════ -->
+<div class="modal-overlay" id="detalleOverlay" onclick="cerrarDetalle(event)">
+  <div class="modal modal-wide" id="detalleModal">
+    <div class="modal-header">
+      <h3 id="detalleNombre">—</h3>
+      <button class="modal-close" onclick="cerrarDetalle()">✕</button>
+    </div>
+    <div id="detalleContent"><!-- JS --></div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+# CONFIGURACIÓN DE AUTOMATIZACIÓN EN EASYPANEL (CONTABO)
+
+Para que el sistema de análisis funcione solo, sigue estos pasos:
+
+1. Entra a tu Easypanel y selecciona tu proyecto 'M-ANALISIS'.
+2. Ve a la pestaña 'Cron' (o 'Sheduled Tasks').
+3. Haz clic en 'Add Cron Job'.
+4. Configura los siguientes campos:
+
+   - Nombre: Sincronización Diaria
+   - Comando: python main.py --semana
+   - Horario (Cron): 0 23 * * *  (Ejecuta a las 11 PM todos los días)
+
+   O si prefieres cada hora:
+   - Horario (Cron): 0 * * * *  (Al minuto 0 de cada hora)
+
+5. Guardar y Activar.
+
+RECOMENDACIÓN:
+Asegúrate de haber llenado la tabla 'agentes' en NocoDB con los nombres/emails que aparecen en RingCentral/Aircall para que la clasificación automática de Setters y Closers funcione correctamente.

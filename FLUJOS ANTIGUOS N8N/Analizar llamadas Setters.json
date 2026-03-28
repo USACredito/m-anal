@@ -1,0 +1,446 @@
+{
+  "name": "Analizar llamadas Setters",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -2928,
+        80
+      ],
+      "id": "466c82f1-c9b8-465e-90d2-064bf6c484c6",
+      "name": "Google Drive",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "aelklQCuQWxipAqJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.deepgram.com/v1/listen",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "nova-2"
+            },
+            {
+              "name": "smart_format",
+              "value": "true"
+            },
+            {
+              "name": "detect_language",
+              "value": "true"
+            }
+          ]
+        },
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Token 860fd114430f63c3401d61ef0e9d600f86b0d981"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/octet-stream"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "binaryData",
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -2736,
+        80
+      ],
+      "id": "13016ce3-46ba-426b-ae2d-59468f1c6802",
+      "name": "Transcript3"
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1c8JcN03UB2PpcskN4atnDrjKEJXkzn33",
+          "mode": "list",
+          "cachedResultName": "LLAMADAS SETTERS",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/1c8JcN03UB2PpcskN4atnDrjKEJXkzn33"
+        },
+        "event": "fileCreated",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        -3088,
+        80
+      ],
+      "id": "3c09937b-0d14-4e98-a0ae-064a56cec590",
+      "name": "Google Drive Trigger1",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "aelklQCuQWxipAqJ",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "team": "9011826413",
+        "space": "90113730365",
+        "folder": "=901110495702",
+        "list": "901110495702",
+        "name": "={{ $json.name }}",
+        "additionalFields": {
+          "customFieldsJson": "={{ JSON.stringify($json.custom_fields) }}",
+          "markdownContent": true
+        }
+      },
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [
+        -1456,
+        80
+      ],
+      "id": "0d499ebc-42d6-4251-b425-d599034fedf8",
+      "name": "ClickUp",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "credentials": {
+        "clickUpApi": {
+          "id": "JurLs3U03bwU1N66",
+          "name": "ClickUp account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Definición de IDs de campos personalizados en ClickUp\nconst CUSTOM_FIELDS = {\n  asistente: \"f15f367f-fc1b-4bdc-ab52-b797a10ffb74\",\n  transcripcion: \"c24a78eb-3a4a-4c5b-ad70-37d58070ea6b\",\n  preguntas_requeridas: \"19cffd24-c5c4-493b-b292-ff7b170c6bc1\",\n  excesos_identificados: \"e3cabf44-7e55-481c-b18e-017dd204622d\",\n  evaluacion_general: \"c6c88fa7-46f8-42b2-a32d-bf9c596b2f8b\",\n  direccion_correcta: \"1477d347-3a05-4a24-9b8f-489c583dec35\", \n  puntuacion: \"244f4bb5-8a0c-4aaa-9818-83a8b8c23922\",\n  areas_de_mejora: \"ad1b6cfb-aeaf-4dee-bf84-c3bdd49ff006\",\n  puntos_debiles: \"4d085d21-9949-42ff-a719-1ab7d4eba4d7\"\n};\n\n// Función para sanitizar texto\nfunction sanitizarTexto(texto) {\n  if (texto === undefined || texto === null) return '';\n  return String(texto)\n    .replace(/\\\\/g, \"\\\\\\\\\")\n    .replace(/\"/g, \"'\")\n    .replace(/\\n/g, \"\\\\n\");\n}\n\n\nlet preguntasRequeridas = '';\nlet excesosIdentificados = '';\nlet evaluacionGeneral = '';\nlet direccionCorrecta = '';\nlet puntuacion = '';\nlet areasDeMejora = '';\nlet puntosDebiles = '';\n\ntry {\n  // Referencia correcta a las variables\n  const inputData = $input.first().json;\n  if (inputData && inputData.output) {\n    preguntasRequeridas = inputData.output[\"Preguntas requeridas\"] || '';\n    direccionCorrecta = inputData.output[\"Dirección correcta\"] || '';\n    excesosIdentificados = inputData.output[\"Excesos identificados\"] || '';\n    evaluacionGeneral = inputData.output[\"Evaluación general\"] || '';\n    areasDeMejora = inputData.output[\"Areas de mejora\"] || inputData.output[\"Áreas de mejora\"] || '';\n    puntosDebiles = inputData.output[\"Puntos debiles\"] || inputData.output[\"Puntos débiles\"] || '';\n    // Intentar diferentes variantes del nombre del campo\n    puntuacion = inputData.output[\"Puntuacion\"] || \n                inputData.output[\"Puntuación\"] || \n                inputData.output[\"PUNTUACION\"] || \n                inputData.output[\"PUNTUACIÓN\"] || '';\n    console.log(\"Datos del AI Agent obtenidos correctamente\");\n    console.log(\"Puntuación obtenida:\", puntuacion);\n  } else {\n    console.log(\"Estructura de datos no esperada:\", JSON.stringify(inputData));\n  }\n} catch (error) {\n  console.log(\"Error obteniendo datos del AI Agent:\", error);\n}\n\n// Si la puntuación no está definida, intentar asignarle un valor por defecto\nif (!puntuacion) {\n  puntuacion = \"7\"; // Valor por defecto si no se encuentra\n  console.log(\"Usando valor de puntuación por defecto:\", puntuacion);\n}\n\n// Obtener nombre del asesor\nlet nombreAsesor = '';\ntry {\n  const asesorNode = $('NombreAsesor');\n  if (asesorNode && asesorNode.item && asesorNode.item.json) {\n    nombreAsesor = asesorNode.item.json.NombreAsesor || '';\n  }\n} catch (error) {\n  console.log(\"Error obteniendo nombre del asesor:\", error);\n}\n\n// Obtener transcripción\nlet transcripcion = '';\ntry {\n  const transcripcionNode = $('TRANSCRIPCION1');\n  if (transcripcionNode && transcripcionNode.item && transcripcionNode.item.json) {\n    transcripcion = transcripcionNode.item.json.transcript || '';\n  }\n} catch (error) {\n  console.log(\"Error obteniendo transcripción:\", error);\n}\n\n// Crear array de campos personalizados directamente como objetos JSON\nlet custom_fields = [];\n\n// Agregar campos solo si tienen valor\nif (nombreAsesor) {\n  custom_fields.push({\n    id: CUSTOM_FIELDS.asistente,\n    value: sanitizarTexto(nombreAsesor)\n  });\n}\n\nif (transcripcion) {\n  custom_fields.push({\n    id: CUSTOM_FIELDS.transcripcion,\n    value: sanitizarTexto(transcripcion)\n  });\n}\n\nif (preguntasRequeridas) {\n  custom_fields.push({\n    id: CUSTOM_FIELDS.preguntas_requeridas,\n    value: sanitizarTexto(preguntasRequeridas)\n  });\n}\n\nif (excesosIdentificados) {\n  custom_fields.push({\n    id: CUSTOM_FIELDS.excesos_identificados,\n    value: sanitizarTexto(excesosIdentificados)\n  });\n}\n\nif (evaluacionGeneral) {\n  custom_fields.push({\n    id: CUSTOM_FIELDS.evaluacion_general,\n    value: sanitizarTexto(evaluacionGeneral)\n  });\n}\n\n// Agregar dirección correcta si tiene valor\nif (direccionCorrecta) {\n  custom_fields.push({\n    id: CUSTOM_FIELDS.direccion_correcta,\n    value: sanitizarTexto(direccionCorrecta)\n  });\n}\n\n// Intentamos la puntuación como texto corto (short_text)\nif (puntuacion !== undefined && puntuacion !== null) {\n  try {\n    // Para un campo de tipo \"short_text\", debemos asegurarnos de que sea un string\n    custom_fields.push({\n      id: CUSTOM_FIELDS.puntuacion,\n      value: String(puntuacion).trim()\n    });\n    \n    console.log(\"Puntuación agregada como short_text:\", String(puntuacion).trim());\n  } catch (error) {\n    console.log(\"Error procesando puntuación:\", error);\n  }\n}\n\n// Agregar areas de mejora si tiene valor\nif (areasDeMejora) {\n  custom_fields.push({\n    id: CUSTOM_FIELDS.areas_de_mejora,\n    value: sanitizarTexto(areasDeMejora)\n  });\n}\n\n// Agregar puntos debiles si tiene valor\nif (puntosDebiles) {\n  custom_fields.push({\n    id: CUSTOM_FIELDS.puntos_debiles,\n    value: sanitizarTexto(puntosDebiles)\n  });\n}\n\n// Crear la estructura exacta para ClickUp\nconst clickupPayload = {\n  name: \"Resumen de llamada Setter\",\n  description: \"\",\n  list_id: \"901110495702\",\n  custom_fields: custom_fields\n};\n\n// Mostrar para depuración\nconsole.log(\"Payload para ClickUp:\", JSON.stringify(clickupPayload));\n\n// NO usar JSON.stringify o estructuras anidadas adicionales\nreturn [clickupPayload];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1680,
+        80
+      ],
+      "id": "a7e0d6e6-b873-4b01-9514-f8b00745eb4f",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Transcript: {{ $('TRANSCRIPCION1').item.json.transcript }}\nDuracion en minutos: {{ $json.durationInMinutes }}",
+        "hasOutputParser": true,
+        "options": {
+          "systemMessage": "=# ROL\nEres un analista experto de llamadas telefónicas. Tu tarea es analizar transcripciones de llamadas realizadas por \"setters\" (primera línea de contacto con clientes) y determinar si están siguiendo el protocolo correcto.\n\n## Contexto\nLos \"setters\" son la primera línea de contacto con potenciales clientes. Su función es limitada y específica:\n1. Hacer preguntas básicas para recopilar información inicial (MÁXIMO 4 preguntas clave)\n2. Lograr que el cliente se registre en la plataforma de monitoreo de crédito\n3. Transferir la llamada a un \"closer\" (especialista) que se encargará de vender y dar detalles técnicos\n\nLos setters NO deben:\n- Extender la llamada más de 15 minutos\n- Vender productos o servicios (esto es trabajo del closer)\n- Responder preguntas técnicas detalladas\n- Hacer evaluaciones de perfil crediticio\n\n## PREGUNTAS REQUERIDAS\n**Todas estas preguntas son importantes y deben realizarse:**\n- ¿Por cuál de nuestras asesorías estás interesado?\n- ¿Cuánto tiempo tienes viviendo en USA?\n- ¿En qué estado vives?\n- ¿Tienes Social Security Number? ¿Cuánto tiempo tienes con SSN?\n- ¿Cuál es tu meta?\n- ¿Tienes LLC? (si aplica para crédito comercial)\n- ¿Tienes tarjetas de crédito?\n- ¿Tienes aspectos negativos en tu perfil de crédito?\n- ¿Has monitoreado tu crédito antes?\n\n## Tu tarea\nAnaliza la transcripción y evalúa los siguientes aspectos:\n\n### 1. ¿El setter hizo correctamente las preguntas requeridas?\n**TODAS LAS PREGUNTAS REQUERIDAS**:\n- Interés en asesoría: [SÍ/NO] [Extracto relevante]\n- Tiempo en USA: [SÍ/NO] [Extracto relevante]\n- Estado de residencia: [SÍ/NO] [Extracto relevante]\n- SSN y antigüedad: [SÍ/NO] [Extracto relevante]\n- Meta del cliente: [SÍ/NO] [Extracto relevante]\n- LLC (si aplica): [SÍ/NO/N/A] [Extracto relevante]\n- Tarjetas de crédito: [SÍ/NO] [Extracto relevante]\n- Aspectos negativos: [SÍ/NO] [Extracto relevante]\n- Monitoreo previo: [SÍ/NO] [Extracto relevante]\n\n### 2. ¿Se excedió en sus funciones?\n- Intentó vender: [SÍ/NO] [Extractos]\n- Respondió preguntas técnicas: [SÍ/NO] [Extractos]\n- Hizo evaluaciones de crédito: [SÍ/NO] [Extractos]\n- Se extendió más de 15 minutos: [SÍ/NO] [Explicación]\n\n### 3. ¿Dirigió correctamente al cliente?\n- Explicó necesidad de registro: [SÍ/NO] [Extracto]\n- Mencionó al especialista: [SÍ/NO] [Extracto]\n\n## Formato de respuesta\n\n```\n## Análisis de llamada\n\n### Preguntas requeridas\n- Interés en asesoría: [SÍ/NO] [Extracto relevante si es SÍ]\n- Tiempo en USA: [SÍ/NO] [Extracto relevante si es SÍ]\n- Estado de residencia: [SÍ/NO] [Extracto relevante si es SÍ]\n- SSN y antigüedad: [SÍ/NO] [Extracto relevante si es SÍ]\n- Meta del cliente: [SÍ/NO] [Extracto relevante si es SÍ]\n- LLC (si aplica): [SÍ/NO/N/A] [Extracto relevante si es SÍ]\n- Tarjetas de crédito: [SÍ/NO] [Extracto relevante si es SÍ]\n- Aspectos negativos: [SÍ/NO] [Extracto relevante si es SÍ]\n- Monitoreo previo: [SÍ/NO] [Extracto relevante si es SÍ]\n\n### Excesos identificados\n- Intentó vender: [SÍ/NO] [Extractos si es SÍ]\n- Respondió preguntas técnicas: [SÍ/NO] [Extractos si es SÍ]\n- Hizo evaluaciones de crédito: [SÍ/NO] [Extractos si es SÍ]\n- Se extendió más de 15 minutos: [SÍ/NO] [Explicación si es SÍ]\n\n### Dirección correcta\n- Explicó necesidad de registro: [SÍ/NO] [Extracto relevante si es SÍ]\n- Mencionó al especialista: [SÍ/NO] [Extracto relevante si es SÍ]\n\n### Puntos débiles identificados\n[Lista específica y priorizada de deficiencias detectadas, incluyendo:]\n**Protocolo:**+**Comunicación:**\n- [Preguntas requeridas no realizadas]\n- [Excesos cometidos]\n- [Duración inadecuada]\n- [Problemas de claridad, tono, manejo de objeciones]\n- [Falta de control de la conversación]\n- [No dirigir efectivamente hacia el registro]\n\n### Áreas de mejora recomendadas\n[Recomendaciones específicas y accionables:]\n**Protocolo:**+**Comunicación:**\n- [Entrenar en todas las preguntas requeridas]\n- [Practicar técnicas de control de tiempo]\n- [Reforzar límites de funciones del setter]\n- [Mejorar técnicas de apertura/cierre]\n- [Desarrollar habilidades de manejo de objeciones]\n- [Fortalecer técnicas de dirección hacia registro]\n\n### Evaluación general\n[Evaluación general del desempeño del setter, identificando el principal problema y el impacto en el proceso de ventas]\n\n### Puntuacion\n- Puntuacion del 1-10 de la llamada basado en una conclusion de los anteriores puntos, que el setter haya intentado vender resta muchos puntos\n\n## Importante\n- Solo evalúa la parte donde el setter habla con el cliente, no conversaciones entre setters o supervisores\n- Si no puedes determinar algo debido a la transcripción incompleta, indícalo claramente\n- Busca patrones de comportamiento que hagan que las llamadas se extiendan innecesariamente\n- La meta principal del setter es recopilar información básica y lograr que el cliente se registre, no vender ni dar asesorías técnicas\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        -2000,
+        80
+      ],
+      "id": "384c7708-aae0-41bb-86ef-6394e961d948",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o",
+          "mode": "list",
+          "cachedResultName": "gpt-4o"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -2016,
+        304
+      ],
+      "id": "4ddd68d2-00ca-4e63-899d-31cc7fca4c62",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "dBrpIFbZWQGU0dhQ",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Se obtiene la lista de items de entrada\nconst items = $input.all();\nconst outputItems = items.map(item => {\n  // Se asume que el nombre del archivo viene en item.json.nombre\n  const fileName = item.json.nombre;\n  \n  // Expresión regular para extraer dígitos entre guiones bajos: _número_\n  const regex = /_(\\d+)_/;\n  const match = fileName.match(regex);\n  \n  // Convertir duration de segundos a minutos con 2 decimales\n  const durationInSeconds = item.json.duration || 0;\n  const durationInMinutes = (durationInSeconds / 60).toFixed(2);\n  \n  if (!match) {\n    // Si no se encuentra el patrón, se retorna un error en el item\n    return { \n      json: { \n        error: `No se encontró el número en el nombre: ${fileName}`,\n        durationInMinutes: durationInMinutes\n      } \n    };\n  }\n  \n  // El primer grupo capturado es el número\n  const extractedNumber = match[1];\n  \n  // Mapeo de números a nombres según la tabla proporcionada\n  const mapping = {\n    \"101\": \"Miguel Moreno\",\n    \"250\": \"Cesar Hernandez\",\n    \"290\": \"Dorvelis Pineda\",\n    \"299\": \"IVR Menu 1\",\n    \"300\": \"Setters\",\n    \"301\": \"Ana Karina Kristen\",\n    \"302\": \"Carlos Perez\",\n    \"303\": \"Nora castillo\",\n    \"304\": \"Lorraine Atencio\",\n    \"308\": \"Yelitza castillo\",\n    \"310\": \"Nordelys Rodriguiez\",\n    \"350\": \"Carlen Gonzalez\",\n    \"351\": \"Yonmar Gonzalez\",\n    \"352\": \"Carolina Santana\",\n    \"353\": \"Paola Medina\",\n    \"355\": \"Francelis Sanchez\",\n    \"356\": \"Juan Raúl Martínez\",\n    \"391\": \"Ridchell Ladera\",\n    \"399\": \"Patricia Medina\",\n    \"401\": \"Andrea P\",\n    \"402\": \"David F\",\n    \"403\": \"Diego Delgado\",\n    \"450\": \"Leopoldo Aponte\",\n    \"499\": \"Customer Experience\",\n    \"501\": \"Glendy Aguil\",\n    \"961\": \"genesis carbone\"\n  };\n  \n  // Se obtiene el nombre correspondiente al número extraído. \n  // Si no se encuentra, se asigna \"Nombre no encontrado\".\n  const nombreCorrespondiente = mapping[extractedNumber] || \"Nombre no encontrado\";\n  \n  // Se retorna el item con el resultado deseado y la duración en minutos\n  return { \n    json: { \n      fileName,\n      extractedNumber,\n      nombreCorrespondiente,\n      durationInMinutes: durationInMinutes\n    } \n  };\n});\n// Se retorna el array de items resultantes\nreturn outputItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -2384,
+        80
+      ],
+      "id": "9001e74f-30f0-4b16-9a41-907c9289757c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c39bc4e3-dbec-41ac-9f00-2c24ed892300",
+              "name": "transcript",
+              "value": "={{ $json.results.channels[0].alternatives[0].transcript }}",
+              "type": "string"
+            },
+            {
+              "id": "5fce9a6a-818c-4055-8258-b6746f426bfc",
+              "name": "nombre",
+              "value": "={{ $('Google Drive Trigger1').item.json.originalFilename }}",
+              "type": "string"
+            },
+            {
+              "id": "78797002-9890-4bbe-8efb-0fa7bc8162b4",
+              "name": "duration",
+              "value": "={{ $json.metadata.duration }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2560,
+        80
+      ],
+      "id": "f37a2b48-ba98-424d-bdc7-f0eadf88e5fb",
+      "name": "TRANSCRIPCION1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c39bc4e3-dbec-41ac-9f00-2c24ed892300",
+              "name": "NombreAsesor",
+              "value": "={{ $json.nombreCorrespondiente }}",
+              "type": "string"
+            },
+            {
+              "id": "5fce9a6a-818c-4055-8258-b6746f426bfc",
+              "name": "NumeroExtension",
+              "value": "={{ $json.extractedNumber }}",
+              "type": "string"
+            },
+            {
+              "id": "65b1eec1-43ad-43d3-9cb2-d9480160bc5e",
+              "name": "nombredelarchivo",
+              "value": "={{ $json.fileName }}",
+              "type": "string"
+            },
+            {
+              "id": "bf6b4f91-5d4a-4c4c-ad76-c87697418658",
+              "name": "durationInMinutes",
+              "value": "={{ $json.durationInMinutes }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -2208,
+        80
+      ],
+      "id": "a39aa283-c6c1-4e96-811c-e8f9d7131523",
+      "name": "NombreAsesor"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n\t\"Preguntas requeridas\": \"California\",\n\t\"Excesos identificados\": \"California\",\n    \"Dirección correcta\": \"California\",\n    \"Puntos debiles\":\n\"California\",\n    \"Areas de mejora\":\n\"California\",\n    \"Evaluación general\": \"California\",\n    \"Puntuacion\": \"1-10\"\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.2,
+      "position": [
+        -1776,
+        304
+      ],
+      "id": "c601dd5e-1062-46d1-88aa-cad5f099a76d",
+      "name": "Structured Output Parser"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "id": "868draa2h"
+      },
+      "type": "n8n-nodes-base.clickUp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "25f9aa5b-e7d9-40df-86f4-5ed1eaa06685",
+      "name": "ClickUp1",
+      "credentials": {
+        "clickUpApi": {
+          "id": "JurLs3U03bwU1N66",
+          "name": "ClickUp account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Transcript3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive Trigger1": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "ClickUp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Transcript3": {
+      "main": [
+        [
+          {
+            "node": "TRANSCRIPCION1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "NombreAsesor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TRANSCRIPCION1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "NombreAsesor": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "2875be4f-fb54-4ef0-ad08-c64c1021ca89",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "14115664ee37812dfca9b0731a0fd999bb5ba40c5826d81b41e03c78e31d6ff8"
+  },
+  "id": "rQL0nztZRUFZJu3T",
+  "tags": []
+}
