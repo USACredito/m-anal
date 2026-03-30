@@ -24,6 +24,9 @@ COPY . .
 # Crear directorio temporal si no existe
 RUN mkdir -p .tmp
 
-# El contenedor se mantendrá encendido para que el cron de Easypanel 
-# pueda ejecutar comandos dentro de él.
-CMD ["tail", "-f", "/dev/null"]
+# Exponer el puerto del Dashboard
+EXPOSE 5050
+
+# Iniciar el servidor de dashboard en segundo plano, 
+# y luego dejar un tail -f para que Easypanel pueda inyectar cron tasks a la misma imagen.
+CMD python dashboard/app.py & tail -f /dev/null
