@@ -89,7 +89,7 @@ def main():
         ("transcripcion", "transcripcion.py"),
         ("gemini", "analisis_gemini.py"),
         ("reportes", "generar_reportes.py"),
-        ("slack", "enviar_slack.py"),
+        ("clickup", "enviar_clickup.py"),
         ("calificaciones", "calificaciones.py"),
     ])
 
