@@ -46,7 +46,7 @@ def sync_calls(dias_atras=1):
     # Rango de fechas
     date_from = (datetime.now() - timedelta(days=dias_atras)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
     
-    url = f"{RC_SERVER_URL}/restapi/v1.0/account/~/extension/~/call-log"
+    url = f"{RC_SERVER_URL}/restapi/v1.0/account/~/call-log"
     params = {
         "dateFrom": date_from,
         "withRecording": "true", # Solo llamadas grabadas
@@ -97,7 +97,7 @@ def sync_calls(dias_atras=1):
             "Título": f"Llamada RC: {from_name} -> {to_name}",
             "Fecha": call.get("startTime", "")[:10],
             "Hora": call.get("startTime", "")[11:16],
-            "Duración (min)": round(call.get("duration", 0) / 60, 2),
+            "Duración (min)": int(call.get("duration", 0) / 60),
             "Participantes": f"{from_name}, {to_name}",
             "URL Grabación": url_audio,
             "Tipo": rol,

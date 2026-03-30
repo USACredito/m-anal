@@ -5,7 +5,7 @@ Sincroniza el historial de llamadas de Aircall con NocoDB.
 
 import os
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 import sys
@@ -27,8 +27,12 @@ def sync_calls():
     url = f"{BASE_URL}/calls"
     auth = (AIRCALL_ID, AIRCALL_TOKEN)
     
+    # Rango de 7 días
+    from_date = int((datetime.now() - timedelta(days=7)).timestamp())
+    params = {"from": from_date, "per_page": 50}
+
     try:
-        resp = requests.get(url, auth=auth)
+        resp = requests.get(url, auth=auth, params=params)
         if resp.status_code != 200:
             print(f"[Aircall] Error en API: {resp.text}")
             return
@@ -58,7 +62,7 @@ def sync_calls():
                 "Título": f"Llamada Aircall: {user_name} -> {contact_number}",
                 "Fecha": datetime.fromtimestamp(call.get("started_at", 0)).strftime("%Y-%m-%d"),
                 "Hora": datetime.fromtimestamp(call.get("started_at", 0)).strftime("%H:%M"),
-                "Duración (min)": round(call.get("duration", 0) / 60, 2),
+                "Duración (min)": int(call.get("duration", 0) / 60),
                 "Participantes": f"{user_name}, {contact_number}",
                 "URL Grabación": call.get("recording"),
                 "Tipo": rol,
