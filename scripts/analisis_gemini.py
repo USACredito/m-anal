@@ -25,7 +25,7 @@ TMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 
 # Configurar Gemini
 genai.configure(api_key=GEMINI_API_KEY)
-MODEL_NAME = "gemini-1.5-flash"  # Modelo rápido y económico para análisis de texto
+MODEL_NAME = "gemini-1.5-flash-latest"  # Modelo rápido y económico para análisis de texto
 
 # ─── SYSTEM PROMPTS POR CATEGORÍA ───────────────────────────────────────────
 

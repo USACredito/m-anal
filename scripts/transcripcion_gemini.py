@@ -41,7 +41,7 @@ def transcribir_audio(ruta_audio):
     print("\nProcesamiento completado. Generando transcripción...")
 
     # 3. Invocar al modelo (Gemini 1.5 Flash es ideal para esto)
-    model = genai.GenerativeModel("gemini-1.5-flash")
+    model = genai.GenerativeModel("gemini-1.5-flash-latest")
     
     prompt = (
         "Eres un transcriptor experto. Escucha el audio adjunto y genera una transcripción altamente precisa. "
