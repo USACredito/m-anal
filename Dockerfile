@@ -27,6 +27,7 @@ RUN mkdir -p .tmp
 # Exponer el puerto del Dashboard
 EXPOSE 5050
 
-# Iniciar el servidor de dashboard en segundo plano, 
-# y luego dejar un tail -f para que Easypanel pueda inyectar cron tasks a la misma imagen.
-CMD python dashboard/app.py & tail -f /dev/null
+# Iniciar el servidor de dashboard.
+# Ocupará el proceso principal manteniendo el contenedor ENCENDIDO eternamente.
+# Easypanel podrá seguir inyectando comandos cron en paralelo hacia este contenedor.
+CMD ["python", "dashboard/app.py"]
