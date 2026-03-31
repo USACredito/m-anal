@@ -8,10 +8,11 @@ ENV PYTHONUNBUFFERED 1
 # Directorio de trabajo
 WORKDIR /app
 
-# Instalar dependencias del sistema necesarias
+# Instalar dependencias del sistema necesarias + cron
 RUN apt-get update && apt-get install -y \
     build-essential \
     curl \
+    cron \
     && rm -rf /var/lib/apt/lists/*
 
 # Copiar requirements primero para aprovechar la cache de Docker
@@ -24,10 +25,11 @@ COPY . .
 # Crear directorio temporal si no existe
 RUN mkdir -p .tmp
 
+# Dar permisos de ejecución al script de arranque
+RUN chmod +x start.sh
+
 # Exponer el puerto del Dashboard
 EXPOSE 5050
 
-# Iniciar el servidor de dashboard.
-# Ocupará el proceso principal manteniendo el contenedor ENCENDIDO eternamente.
-# Easypanel podrá seguir inyectando comandos cron en paralelo hacia este contenedor.
-CMD ["python", "dashboard/app.py"]
+# Usar el script de inicio personalizado para manejar Cron + Dashboard
+CMD ["/bin/bash", "./start.sh"]
