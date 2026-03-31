@@ -35,8 +35,10 @@ PORT = 5050
 
 # ─── DATOS DE DEMO (cuando NocoDB no está configurado) ────────────────────────
 
-NOCODB_URL = os.getenv("NOCODB_URL", "")
-NOCODB_CONFIGURED = bool(NOCODB_URL and NOCODB_URL != "https://tu-servidor-nocodb.com")
+# Verificar si NocoDB tiene las credenciales mínimas para operar
+NOCODB_API_TOKEN = os.getenv("NOCODB_API_TOKEN", "")
+NOCODB_PROJECT_ID = os.getenv("NOCODB_PROJECT_ID", "")
+NOCODB_CONFIGURED = bool(NOCODB_API_TOKEN and NOCODB_PROJECT_ID)
 
 DEMO_AGENTES = [
     {"Id": 1, "nombre": "Carlos Méndez", "tipo": "closer", "email_fathom": "carlos@empresa.com", "activo": True, "fecha_registro": "2025-01-10"},
@@ -194,9 +196,14 @@ def index():
 def api_get_agentes():
     if NOCODB_CONFIGURED:
         try:
+            print(f"[DASHBOARD] Buscando agentes en NocoDB...")
             agentes = listar_registros("agentes")
-            return jsonify(agentes)
+            print(f"[DASHBOARD] Se encontraron {len(agentes)} agentes.")
+            if not agentes:
+                print("[DASHBOARD] AVISO: La tabla de agentes en NocoDB está vacía o el Table ID es incorrecto.")
+            return jsonify({"demo": False, "datos": agentes})
         except Exception as e:
+            print(f"[DASHBOARD] Fallo al conectar con NocoDB: {e}")
             return jsonify({"error": str(e), "demo": True, "datos": _demo_agentes_store})
     return jsonify({"demo": True, "datos": _demo_agentes_store})
 
