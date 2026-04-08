@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Call Analysis — Dashboard</title>
+  <title>Call Analysis — CEO Dashboard</title>
+  <meta name="description" content="Dashboard de rendimiento de ventas para Setters y Closers. KPIs en tiempo real desde NocoDB." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
@@ -26,13 +27,9 @@
       <span class="nav-icon">📊</span>
       <span>Rendimiento</span>
     </button>
-    <button class="nav-item" data-tab="agentes" onclick="switchTab('agentes', this)">
-      <span class="nav-icon">👥</span>
-      <span>Agentes</span>
-    </button>
-    <button class="nav-item" data-tab="evolucion" onclick="switchTab('evolucion', this)">
-      <span class="nav-icon">📈</span>
-      <span>Evolución</span>
+    <button class="nav-item" data-tab="llamadas" onclick="switchTab('llamadas', this)">
+      <span class="nav-icon">📋</span>
+      <span>Llamadas</span>
     </button>
   </nav>
 
@@ -78,9 +75,9 @@
         <div class="kpi-label">Bajo Promedio</div>
       </div>
       <div class="kpi-card loading-pulse">
-        <div class="kpi-icon">🏢</div>
-        <div class="kpi-val" id="kpiTotal">—</div>
-        <div class="kpi-label">Equipo Activo</div>
+        <div class="kpi-icon">📞</div>
+        <div class="kpi-val" id="kpiTotalLlamadas">—</div>
+        <div class="kpi-label">Llamadas Analizadas</div>
       </div>
     </div>
 
@@ -98,93 +95,24 @@
 
   </section>
 
-  <!-- ═══════════════════ TAB: AGENTES ═══════════════════ -->
-  <section class="tab-content" id="tab-agentes">
+  <!-- ═══════════════════ TAB: LLAMADAS ═══════════════════ -->
+  <section class="tab-content" id="tab-llamadas">
 
-    <div class="section-header">
-      <h2 class="section-title">Gestión de Agentes</h2>
-      <button class="btn-primary" onclick="abrirModal()">+ Nuevo Agente</button>
+    <!-- Filtros llamadas -->
+    <div class="filter-row" style="margin-bottom:20px">
+      <button class="filter-btn active" data-filter="todos" onclick="filtrarLlamadas('todos', this)">Todas</button>
+      <button class="filter-btn" data-filter="setter" onclick="filtrarLlamadas('setter', this)">Setters</button>
+      <button class="filter-btn" data-filter="closer" onclick="filtrarLlamadas('closer', this)">Closers</button>
     </div>
 
-    <div class="table-wrap">
-      <table class="data-table" id="agentesTable">
-        <thead>
-          <tr>
-            <th>Nombre</th>
-            <th>Tipo</th>
-            <th>Email Fathom</th>
-            <th>Estado</th>
-            <th>Registrado</th>
-            <th>Acciones</th>
-          </tr>
-        </thead>
-        <tbody id="agentesTableBody">
-          <tr><td colspan="6" class="loading-cell">Cargando agentes...</td></tr>
-        </tbody>
-      </table>
+    <!-- Lista de llamadas -->
+    <div id="llamadasContainer">
+      <p style="color:var(--text-muted);text-align:center;padding:48px">Cargando llamadas...</p>
     </div>
 
-  </section>
-
-  <!-- ═══════════════════ TAB: EVOLUCIÓN ═══════════════════ -->
-  <section class="tab-content" id="tab-evolucion">
-    <div class="section-header">
-      <h2 class="section-title">Análisis Histórico</h2>
-      <p style="color:var(--text-muted);font-size:13px;">Evolución de calidad por departamento</p>
-    </div>
-
-    <div class="chart-container-big" style="background:var(--bg-card); border-radius:var(--radius); padding:30px; border:1px solid var(--border);">
-      <canvas id="evolucionChart"></canvas>
-    </div>
-
-    <div class="evol-legend" style="margin-top:20px; text-align:center;">
-      <span class="legend-dot" style="background:#8b5cf6; display:inline-block; width:12px; height:12px; border-radius:50%;"></span> Closers &nbsp;&nbsp;
-      <span class="legend-dot" style="background:#10b981; display:inline-block; width:12px; height:12px; border-radius:50%;"></span> Setters &nbsp;&nbsp;
-      <span class="legend-dot" style="background:#f59e0b; display:inline-block; width:12px; height:12px; border-radius:50%;"></span> Calidad Leads
-    </div>
   </section>
 
 </main>
-
-<!-- ═══════════════════ MODAL AGENTE ═══════════════════ -->
-<div class="modal-overlay" id="modalOverlay" onclick="cerrarModal(event)">
-  <div class="modal" id="modal">
-    <div class="modal-header">
-      <h3 id="modalTitle">Nuevo Agente</h3>
-      <button class="modal-close" onclick="cerrarModal()">✕</button>
-    </div>
-    <form id="agenteForm" onsubmit="guardarAgente(event)">
-      <input type="hidden" id="agenteId" value="" />
-
-      <div class="form-group">
-        <label>Nombre completo *</label>
-        <input type="text" id="fNombre" placeholder="Ej: Carlos Méndez" required />
-      </div>
-      <div class="form-group">
-        <label>Tipo de Agente *</label>
-        <select id="fTipo" required>
-          <option value="setter">Setter (Agendador)</option>
-          <option value="closer">Closer (Vendedor)</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Email en Fathom</label>
-        <input type="email" id="fEmail" placeholder="email@empresa.com" />
-      </div>
-      <div class="form-group">
-        <label class="toggle-label" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
-          <input type="checkbox" id="fActivo" checked />
-          <span class="toggle-text" style="font-size:13px; color:var(--text-dim);">Agente Activo</span>
-        </label>
-      </div>
-
-      <div class="modal-footer" style="padding:24px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end;">
-        <button type="button" class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
-        <button type="submit" class="btn-primary" id="btnGuardar">Guardar Agente</button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <!-- ═══════════════════ MODAL DETALLE AGENTE ═══════════════════ -->
 <div class="modal-overlay" id="detalleOverlay" onclick="cerrarDetalle(event)">
@@ -197,9 +125,16 @@
   </div>
 </div>
 
-<script src="/static/app.js"></script>
-</body>
-</html>
+<!-- ═══════════════════ MODAL DETALLE LLAMADA ═══════════════════ -->
+<div class="modal-overlay" id="llamadaOverlay" onclick="cerrarLlamada(event)">
+  <div class="modal modal-wide" id="llamadaModal">
+    <div class="modal-header">
+      <h3 id="llamadaTitulo">—</h3>
+      <button class="modal-close" onclick="cerrarLlamada()">✕</button>
+    </div>
+    <div id="llamadaContent" style="padding:32px;"><!-- JS --></div>
+  </div>
+</div>
 
 <script src="/static/app.js"></script>
 </body>

@@ -314,6 +314,11 @@ def api_metricas():
                     "peor": min(valores) if valores else None,
                     "desglose": desglose,
                     "historial": historial,
+                    "tasa_cierre": round(
+                        sum(1 for c in calificaciones
+                            if str(c.get("Resultado") or "").lower() in ("vendió", "vendo", "cerrado", "venta", "sí", "si"))
+                        / len(calificaciones) * 100, 1
+                    ) if calificaciones else 0,
                 })
 
             # ── Setters ──────────────────────────────────────────────────────
@@ -351,6 +356,11 @@ def api_metricas():
                     "peor": min(valores) if valores else None,
                     "desglose": desglose,
                     "historial": historial,
+                    "tasa_agendamiento": round(
+                        sum(1 for s in calificaciones
+                            if str(s.get("Agendó?") or "").strip().lower() in ("sí", "si", "yes", "1", "true"))
+                        / len(calificaciones) * 100, 1
+                    ) if calificaciones else 0,
                 })
 
         except Exception as e:
@@ -383,6 +393,23 @@ def _build_demo_metricas():
         })
     return out
 
+
+
+@app.route("/api/llamadas", methods=["GET"])
+def api_llamadas():
+    """Retorna calificaciones individuales de closers y setters para la vista de llamadas."""
+    if not NOCODB_CONFIGURED:
+        return jsonify({"demo": True, "datos": {
+            "closers": DEMO_CALIFICACIONES_CLOSERS,
+            "setters": DEMO_CALIFICACIONES_SETTERS
+        }})
+    try:
+        closers = listar_registros("calificaciones_closers")
+        setters = listar_registros("calificaciones_setters")
+        return jsonify({"demo": False, "datos": {"closers": closers, "setters": setters}})
+    except Exception as e:
+        print(f"[DASHBOARD] Error leyendo llamadas: {e}")
+        return jsonify({"error": str(e), "datos": {"closers": [], "setters": []}}), 500
 
 
 @app.route("/api/resumen_mensual", methods=["GET"])
