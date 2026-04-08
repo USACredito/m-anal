@@ -32,6 +32,25 @@ TMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 os.makedirs(TMP_DIR, exist_ok=True)
 
 TABLAS = ["llamadas_ventas", "llamadas_soporte", "llamadas_onboarding"]
+BATCH_SIZE = 10   # Procesar máx 10 llamadas por ejecución para no sobrecargar APIs
+DELAY_ENTRE_DESCARGAS = 2  # segundos entre descargas
+
+# Token RC cacheado para toda la sesión (se obtiene 1 sola vez)
+_rc_token_cache = None
+
+def obtener_token_rc_cached() -> str | None:
+    """Obtiene el token de RingCentral UNA SOLA VEZ por ejecución y lo guarda en caché."""
+    global _rc_token_cache
+    if _rc_token_cache:
+        return _rc_token_cache
+    try:
+        from scripts.sync_ringcentral import obtener_access_token
+        _rc_token_cache = obtener_access_token()
+        print(f"  [RC] Token obtenido: {_rc_token_cache[:20]}...")
+        return _rc_token_cache
+    except Exception as e:
+        print(f"  [WARN] No se pudo obtener token RC: {e}")
+        return None
 
 
 def renovar_url_aircall(call_id_str: str) -> str | None:
@@ -42,7 +61,6 @@ def renovar_url_aircall(call_id_str: str) -> str | None:
     if not AIRCALL_ID or not AIRCALL_TOKEN:
         return None
     try:
-        # El call_id puede venir como "3647174148" o con prefijo; limpiamos
         numeric_id = ''.join(filter(str.isdigit, call_id_str.split("-")[0] if "-" in call_id_str else call_id_str))
         if not numeric_id:
             return None
@@ -61,30 +79,32 @@ def renovar_url_aircall(call_id_str: str) -> str | None:
 def descargar_audio(url: str, call_id: str, titulo: str = ""):
     """
     Descarga un archivo de audio desde una URL y lo guarda en .tmp/
-    Si la URL de Aircall está expirada (403/404), renueva automáticamente.
+    - RingCentral: usa token Bearer cacheado (1 sola petición de token por sesión)
+    - Aircall: renueva URL si está expirada (403/404)
     """
     print(f"  → [{call_id}] Descargando audio...")
     ruta_local = os.path.join(TMP_DIR, f"{call_id}.mp3")
 
     headers = {}
-    if "ringcentral.com" in url or "platform.devtest.ringcentral.com" in url:
-        try:
-            from scripts.sync_ringcentral import obtener_access_token
-            token = obtener_access_token()
+    es_ringcentral = "ringcentral.com" in url
+
+    if es_ringcentral:
+        token = obtener_token_rc_cached()
+        if token:
             headers["Authorization"] = f"Bearer {token}"
-        except Exception as e:
-            print(f"    [WARN] No se pudo obtener token RC: {e}")
+        else:
+            print(f"  [SKIP] Sin token RC — saltando {call_id}")
+            return None
 
     try:
         resp = requests.get(url, headers=headers, stream=True, timeout=60)
 
-        # Si Aircall devuelve error de URL expirada, renovar y reintentar
-        if resp.status_code in (403, 404) and ("s3.amazonaws.com" in url or "aircall" in url.lower()):
+        # Aircall URL expirada: renovar y reintentar
+        if resp.status_code in (403, 404) and not es_ringcentral:
             print(f"    [WARN] URL expirada (HTTP {resp.status_code}). Renovando desde Aircall API...")
             nueva_url = renovar_url_aircall(call_id)
             if nueva_url:
                 resp = requests.get(nueva_url, stream=True, timeout=60)
-                url = nueva_url  # actualizar para el log
 
         resp.raise_for_status()
 
@@ -161,7 +181,12 @@ def procesar_llamadas():
 
         print(f"  Encontradas {len(registros_unicos)} llamadas para procesar.")
 
-        for r in registros_unicos:
+        # Limitar batch para no sobrecargar las APIs
+        lote = registros_unicos[:BATCH_SIZE]
+        if len(registros_unicos) > BATCH_SIZE:
+            print(f"  [INFO] Procesando solo las primeras {BATCH_SIZE} de {len(registros_unicos)} (cron reintentará el resto).")
+
+        for r in lote:
             nocodb_id = r.get("Id")
             call_id   = r.get("ID Fathom") or str(nocodb_id)
             url_audio = r.get("URL Grabación", "")
@@ -173,6 +198,7 @@ def procesar_llamadas():
             # Descargar
             ruta_local = descargar_audio(url_audio, call_id, titulo)
             if not ruta_local:
+                time.sleep(DELAY_ENTRE_DESCARGAS)
                 continue
 
             # Transcribir
@@ -187,10 +213,15 @@ def procesar_llamadas():
                 })
                 print(f"  [OK] [{call_id}] Transcripción completada ({len(texto_final)} chars).")
                 total_procesadas += 1
+            else:
+                # Marcar como fallida para no reintentarla indefinidamente
+                actualizar_registro(tabla, nocodb_id, {"Estado": "error_transcripcion"})
 
             # Limpiar archivo local
             if os.path.exists(ruta_local):
                 os.remove(ruta_local)
+
+            time.sleep(DELAY_ENTRE_DESCARGAS)
 
     print(f"\n✅ Proceso de transcripción finalizado. Total: {total_procesadas}")
 
