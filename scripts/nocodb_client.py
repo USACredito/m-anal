@@ -16,13 +16,13 @@ NOCODB_API_TOKEN = os.getenv("NOCODB_API_TOKEN", "")
 PROJECT_ID = os.getenv("NOCODB_PROJECT_ID", "p9sqt7wk1bkr0lq")
 
 MAPA_TABLAS = {
-    # Usamos los nombres reales de las tablas para que la API las resuelva dinámicamente
-    "llamadas_ventas": "llamadas_ventas",
-    "agentes": "agentes",
-    "calificaciones_leads": "calificaciones_leads",
-    "calificaciones_closers": "calificaciones_closers",
-    "calificaciones_setters": "calificaciones_setters",
-    "resumen_mensual_calidad": "resumen_mensual_calidad"
+    # Versión 3: Tablas totalmente nuevas para evitar conflictos de alias en NocoDB
+    "llamadas_ventas": "v3_llamadas_ventas",
+    "agentes": "v2_agentes", # Agentes lo mantenemos o v2 si es necesario
+    "calificaciones_leads": "v3_calificaciones_leads",
+    "calificaciones_closers": "v3_calificaciones_closers",
+    "calificaciones_setters": "v3_calificaciones_setters",
+    "resumen_mensual_calidad": "v3_resumen_mensual_calidad"
 }
 
 NOCODB_BASE_API_URL = f"{RAW_URL}/api/v3"

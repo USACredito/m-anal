@@ -46,24 +46,23 @@ def create_table(name, title, columns):
         return None
 
 def main():
-    print(f"--- INICIALIZANDO NOCODB (Proyecto: {PROJECT_ID}) ---")
+    print(f"--- INICIALIZANDO NOCODB V3 (Proyecto: {PROJECT_ID}) ---")
     
     # 1. TABLA DE LLAMADAS (Solo Ventas)
     col_llamadas = [
-        {"column_name": "id_fathom", "title": "ID Fathom", "uidt": "SingleLineText"},
+        {"column_name": "id_llamada_fathom", "title": "ID Fathom", "uidt": "SingleLineText"},
         {"column_name": "titulo", "title": "Título", "uidt": "SingleLineText"},
         {"column_name": "fecha", "title": "Fecha", "uidt": "Date"},
         {"column_name": "hora", "title": "Hora", "uidt": "SingleLineText"},
         {"column_name": "duracion_minutos", "title": "Duración (min)", "uidt": "Number"},
         {"column_name": "participantes", "title": "Participantes", "uidt": "LongText"},
         {"column_name": "url_grabacion", "title": "URL Grabación", "uidt": "SingleLineText"},
-        {"column_name": "url_transcripcion_fathom", "title": "URL Transcripción Fathom", "uidt": "SingleLineText"},
         {"column_name": "tipo", "title": "Tipo", "uidt": "SingleLineText"},
         {"column_name": "estado_procesamiento", "title": "Estado", "uidt": "SingleLineText"},
         {"column_name": "transcripcion_texto", "title": "Transcripción Texto", "uidt": "LongText"},
         {"column_name": "fecha_procesamiento", "title": "Fecha Procesamiento", "uidt": "Date"}
     ]
-    create_table("llamadas_ventas", "Llamadas Ventas", col_llamadas)
+    create_table("v3_llamadas_ventas", "Llamadas Ventas v3", col_llamadas)
 
     # 2. TABLA AGENTES
     col_agentes = [
@@ -73,7 +72,8 @@ def main():
         {"column_name": "activo", "title": "Activo", "uidt": "Checkbox", "default_value": "true"},
         {"column_name": "fecha_registro", "title": "Fecha Registro", "uidt": "Date"}
     ]
-    create_table("agentes", "Agentes", col_agentes)
+    # Usamos v2_agentes para no borrar los agentes si ya existen o v3 si queremos limpieza total
+    create_table("v3_agentes", "Agentes v3", col_agentes)
 
     # 3. TABLA DE CALIFICACIONES LEADS (CALIDAD DE CLIENTE)
     col_calif_leads = [
@@ -86,7 +86,7 @@ def main():
         {"column_name": "factores_negativos", "title": "Negativos", "uidt": "LongText"},
         {"column_name": "mes_año", "title": "Mes-Año", "uidt": "SingleLineText"}
     ]
-    create_table("calificaciones_leads", "Calificaciones Leads", col_calif_leads)
+    create_table("v3_calificaciones_leads", "Calificaciones Leads v3", col_calif_leads)
 
     # 4. TABLA DE CALIFICACIONES CLOSERS (DESEMPEÑO STAFF)
     col_calif_closers = [
@@ -102,7 +102,7 @@ def main():
         {"column_name": "fecha_llamada", "title": "Fecha Llamada", "uidt": "Date"},
         {"column_name": "mes_año", "title": "Mes-Año", "uidt": "SingleLineText"}
     ]
-    create_table("calificaciones_closers", "Calificaciones Closers", col_calif_closers)
+    create_table("v3_calificaciones_closers", "Calificaciones Closers v3", col_calif_closers)
 
     # 5. TABLA DE CALIFICACIONES SETTERS (DESEMPEÑO STAFF)
     col_calif_setters = [
@@ -117,10 +117,10 @@ def main():
         {"column_name": "fecha_llamada", "title": "Fecha Llamada", "uidt": "Date"},
         {"column_name": "mes_año", "title": "Mes-Año", "uidt": "SingleLineText"}
     ]
-    create_table("calificaciones_setters", "Calificaciones Setters", col_calif_setters)
+    create_table("v3_calificaciones_setters", "Calificaciones Setters v3", col_calif_setters)
 
     # 6. RESUMEN MENSUAL
-    create_table("resumen_mensual_calidad", "Resumen Mensual", [
+    create_table("v3_resumen_mensual_calidad", "Resumen Mensual v3", [
         {"column_name": "mes_año", "title": "Mes-Año", "uidt": "SingleLineText"},
         {"column_name": "promedio_calidad_setters", "title": "Promedio Setters", "uidt": "Number"},
         {"column_name": "promedio_calidad_leads", "title": "Promedio Leads", "uidt": "Number"},
