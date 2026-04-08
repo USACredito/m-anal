@@ -10,7 +10,6 @@ import sys
 import requests
 import time
 from datetime import datetime, timedelta
-import google.generativeai as genai
 from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -18,10 +17,8 @@ from scripts.nocodb_client import actualizar_registro, listar_registros
 
 load_dotenv()
 
-# Configuración Gemini — modelo sin sufijo "-latest" que no existe en v1beta
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-genai.configure(api_key=GEMINI_API_KEY)
-MODEL_NAME = "gemini-2.0-flash-exp"  # Disponible en v1beta
+# Configuracion Gemini (Removido por que causaba error)
+
 
 # Credenciales Aircall para renovar URLs expiradas
 AIRCALL_ID    = os.getenv("AIRCALL_ID")
@@ -32,7 +29,7 @@ TMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 os.makedirs(TMP_DIR, exist_ok=True)
 
 TABLAS = ["llamadas_ventas"]
-BATCH_SIZE = 10   # Procesar máx 10 llamadas por ejecución para no sobrecargar APIs
+BATCH_SIZE = 200   # Procesar máx 200 llamadas por ejecución para no sobrecargar APIs
 DELAY_ENTRE_DESCARGAS = 2  # segundos entre descargas
 
 # Token RC cacheado para toda la sesión (se obtiene 1 sola vez)
@@ -179,10 +176,8 @@ def procesar_llamadas():
     """
     total_procesadas = 0
 
-    # Calcular lunes de esta semana
     hoy = datetime.now()
-    lunes_semana = hoy - timedelta(days=hoy.weekday())
-    fecha_corte = lunes_semana.strftime("%Y-%m-%d")
+    fecha_corte = "2000-01-01" # Procesar todo el backlog pendiente
     print(f"\n📅 Solo procesando llamadas desde: {fecha_corte} (lunes de esta semana)")
 
     for tabla in TABLAS:

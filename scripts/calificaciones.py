@@ -13,8 +13,6 @@ import os
 import sys
 from datetime import datetime, timedelta
 import requests
-
-import google.generativeai as genai
 from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -22,8 +20,6 @@ from scripts.nocodb_client import crear_registro, listar_registros
 
 load_dotenv()
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-genai.configure(api_key=GEMINI_API_KEY)
 MODEL_NAME = "gemini-1.5-flash-latest"
 
 # ─── PROMPTS DE CALIFICACIÓN ──────────────────────────────────────────────────
