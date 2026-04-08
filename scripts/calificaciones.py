@@ -261,10 +261,10 @@ def guardar_resumen_mensual(avg_leads, avg_closers, n_ventas):
     mes_anio = datetime.now().strftime("%Y-%m")
     try:
         crear_registro("resumen_mensual_calidad", {
-            "Mes-Año": mes_anio,
-            "Promedio Leads": avg_leads,
-            "Promedio Closers": avg_closers,
-            "Total Ventas": n_ventas,
+            "mes_año": mes_anio,
+            "promedio_calidad_leads": avg_leads,
+            "promedio_calidad_closers": avg_closers,
+            "total_llamadas_ventas": n_ventas,
         })
         print(f"\n[CALIFICACIONES] Resumen mensual {mes_anio} guardado en NocoDB.")
     except Exception as e:
@@ -292,7 +292,8 @@ def main():
     # Obtener registros transcriptos del rango
     def get_registros(tabla):
         try:
-            regs = listar_registros(tabla, where="(Estado,eq,transcrito)")
+            # Usamos el nombre interno 'estado_procesamiento' para mayor seguridad
+            regs = listar_registros(tabla, where="(estado_procesamiento,eq,transcrito)")
             return [r for r in regs if args.inicio <= r.get("Fecha", "") <= args.fin]
         except Exception as e:
             print(f"  [WARN] No se pudo leer {tabla}: {e}")
