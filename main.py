@@ -1,12 +1,12 @@
 """
 main.py — ORQUESTADOR PRINCIPAL
 Ejecuta el pipeline completo de análisis de llamadas:
-  0. Sincronización de llamadas (RingCentral y Aircall)
-  1. Transcripción de llamadas pendientes (Gemini)
-  2. Análisis con Gemini por categoría
-  3. Generación de reportes PDF
-  4. Envío de emails
-  5. Calificaciones de calidad
+  1. Sincronización de llamadas (RingCentral y Aircall)
+  2. Transcripción de llamadas pendientes (Gemini)
+  3. Análisis de texto con Gemini
+  4. Calificaciones de calidad en NocoDB
+
+Nota: ClickUp deshabilitado. Los datos van solo a NocoDB y al Dashboard.
 """
 
 import argparse
@@ -57,7 +57,10 @@ def main():
         fecha_inicio = hoy
         fecha_fin = hoy
     elif args.semana:
-        fecha_inicio = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
+        # Lunes de esta semana (no 7 días atrás)
+        hoy_dt = datetime.now()
+        lunes = hoy_dt - timedelta(days=hoy_dt.weekday())
+        fecha_inicio = lunes.strftime("%Y-%m-%d")
         fecha_fin = hoy
     else:
         if not args.fin:
@@ -88,12 +91,10 @@ def main():
     pipeline.extend([
         ("transcripcion", "transcripcion.py"),
         ("gemini", "analisis_gemini.py"),
-        ("reportes", "generar_reportes.py"),
-        ("clickup", "enviar_clickup.py"),
         ("calificaciones", "calificaciones.py"),
+        # ClickUp eliminado — datos van solo a NocoDB y Dashboard
     ])
 
-    # Filtrar si se especifica --solo (excepto para sync que ya manejamos arriba)
     if args.solo and args.solo != "sync":
         pipeline = [(k, v) for k, v in pipeline if k == args.solo]
 

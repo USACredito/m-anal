@@ -9,7 +9,7 @@ import os
 import sys
 import requests
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 import google.generativeai as genai
 from dotenv import load_dotenv
 
@@ -158,12 +158,18 @@ def transcribir_con_gemini(ruta_audio: str, call_id: str) -> str | None:
         print(f"  [ERROR] Error en Gemini: {e}")
         return None
 
-
 def procesar_llamadas():
     """
     Recorre las tablas de NocoDB buscando llamadas 'pendientes' o sin estado.
+    SOLO procesa llamadas desde el lunes de la semana actual en adelante.
     """
     total_procesadas = 0
+
+    # Calcular lunes de esta semana
+    hoy = datetime.now()
+    lunes_semana = hoy - timedelta(days=hoy.weekday())
+    fecha_corte = lunes_semana.strftime("%Y-%m-%d")
+    print(f"\n📅 Solo procesando llamadas desde: {fecha_corte} (lunes de esta semana)")
 
     for tabla in TABLAS:
         print(f"\n--- Revisando tabla: {tabla} ---")
@@ -176,10 +182,15 @@ def procesar_llamadas():
             print(f"  [WARN] Error listando registros: {e}")
             continue
 
-        # Deduplicar
+        # Deduplicar y filtrar por fecha de esta semana
         vistos, registros_unicos = set(), []
         for r in registros:
             if r.get("Id") not in vistos:
+                # Filtrar por fecha — solo esta semana en adelante
+                fecha_llamada = r.get("Fecha", "") or ""
+                if fecha_llamada < fecha_corte:
+                    vistos.add(r.get("Id"))
+                    continue  # Ignorar llamadas antiguas sin marcarlas
                 registros_unicos.append(r)
                 vistos.add(r.get("Id"))
 
