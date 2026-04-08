@@ -182,6 +182,15 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
         fecha = r.get("Fecha", "")
         mes_anio = datetime.now().strftime("%Y-%m")
 
+        # Extraer nombre del agente desde los metadatos de la llamada
+        participantes = r.get("Participantes", "")
+        tipo_llamada = (r.get("Tipo") or "").lower()
+        # El primer participante suele ser el agente (quien llama)
+        partes = [p.strip() for p in participantes.split(",") if p.strip()]
+        nombre_agente_meta = partes[0] if partes else "Desconocido"
+        # Contexto extra para pasar al prompt
+        contexto_agente = f"\n\n[CONTEXTO]: El nombre del agente que realizó esta llamada es: {nombre_agente_meta}. Úsalo como nombre_closer o nombre_setter."
+
         # ── Calificar Lead ──
         print(f"  → [{call_id}] Evaluando calidad del LEAD...")
         resultado_lead = llamar_openai_json(PROMPT_CALIDAD_LEAD, transcripcion)
@@ -203,14 +212,18 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
 
         # ── Calificar Setter ──
         print(f"  → [{call_id}] Evaluando desempeño del SETTER...")
-        resultado_setter = llamar_openai_json(PROMPT_CALIDAD_SETTER, transcripcion)
+        resultado_setter = llamar_openai_json(PROMPT_CALIDAD_SETTER, transcripcion + contexto_agente)
         if "error" not in resultado_setter:
             desglose = resultado_setter.get("desglose", {})
+            # Si GPT no pudo identificar el nombre, usar el de los metadatos
+            nombre_setter = resultado_setter.get("nombre_setter", "Desconocido")
+            if not nombre_setter or nombre_setter == "Desconocido":
+                nombre_setter = nombre_agente_meta
             payload = {}
             try:
                 payload = {
                     "ID Llamada": call_id,
-                    "Setter": resultado_setter.get("nombre_setter", "Desconocido"),
+                    "Setter": nombre_setter,
                     "Nota Total": float(resultado_setter.get("calificacion_total", 0)),
                     "Rapport": float(desglose.get("rapport", 0)),
                     "Identificación Dolor": float(desglose.get("identificacion_dolor", 0)),
@@ -227,14 +240,18 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
 
         # ── Calificar Closer ──
         print(f"  → [{call_id}] Calificando closer con OpenAI...")
-        resultado_closer = llamar_openai_json(PROMPT_CALIDAD_CLOSER, transcripcion)
+        resultado_closer = llamar_openai_json(PROMPT_CALIDAD_CLOSER, transcripcion + contexto_agente)
         if "error" not in resultado_closer:
             desglose = resultado_closer.get("desglose", {})
+            # Si GPT no pudo identificar el nombre, usar el de los metadatos
+            nombre_closer = resultado_closer.get("nombre_closer", "Desconocido")
+            if not nombre_closer or nombre_closer == "Desconocido":
+                nombre_closer = nombre_agente_meta
             payload_closer = {}
             try:
                 payload_closer = {
                     "ID Llamada": call_id,
-                    "Closer": resultado_closer.get("nombre_closer", "Desconocido"),
+                    "Closer": nombre_closer,
                     "Nota Total": float(resultado_closer.get("calificacion_total", 0)),
                     "Rapport": float(desglose.get("rapport", 0)),
                     "Descubrimiento": float(desglose.get("descubrimiento", 0)),
