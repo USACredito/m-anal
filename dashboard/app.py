@@ -125,14 +125,14 @@ def metricas_agente(agente: dict) -> dict:
     if NOCODB_CONFIGURED:
         if tipo in ("closer", "soporte"):
             calificaciones = get_calificaciones_por_nombre(
-                "calificaciones_closers", "nombre_closer", nombre
+                "calificaciones_closers", "Closer", nombre
             )
-            campo_total = "calificacion_total"
+            campo_total = "Nota Total"
         else:
             calificaciones = get_calificaciones_por_nombre(
-                "calificaciones_onboarding", "nombre_coach", nombre
+                "calificaciones_onboarding", "Coach", nombre
             )
-            campo_total = "calificacion_total"
+            campo_total = "Nota Total"
     else:
         calificaciones = get_calificaciones_demo(tipo, nombre)
         campo_total = "calificacion_total"
@@ -155,12 +155,12 @@ def metricas_agente(agente: dict) -> dict:
     # Desglose promedio por dimensión
     desglose = {}
     if tipo == "closer" or tipo == "soporte":
-        dims = ["calificacion_rapport", "calificacion_descubrimiento",
-                "calificacion_presentacion", "calificacion_objeciones", "calificacion_cierre"]
+        dims = ["Rapport", "Descubrimiento",
+                "Presentación", "Objeciones", "Cierre"]
         labels = ["Rapport", "Descubrimiento", "Presentación", "Objeciones", "Cierre"]
     else:
-        dims = ["calificacion_claridad", "calificacion_adaptacion",
-                "calificacion_completitud", "calificacion_tiempo", "calificacion_satisfaccion"]
+        dims = ["Claridad", "Adaptación",
+                "Completitud", "Tiempo", "Satisfacción"]
         labels = ["Claridad", "Adaptación", "Completitud", "Tiempo", "Satisfacción"]
 
     for dim, label in zip(dims, labels):
@@ -169,7 +169,7 @@ def metricas_agente(agente: dict) -> dict:
 
     # Historial para gráfica
     historial = [
-        {"fecha": c.get("fecha_llamada", ""), "calificacion": c.get(campo_total, 0)}
+        {"fecha": c.get("Fecha Llamada", ""), "calificacion": c.get(campo_total, 0)}
         for c in calificaciones[-10:]
     ]
 
