@@ -21,7 +21,7 @@ load_dotenv()
 # Configuración Gemini — modelo sin sufijo "-latest" que no existe en v1beta
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
-MODEL_NAME = "gemini-1.5-flash"   # <-- CORREGIDO: sin "-latest"
+MODEL_NAME = "gemini-2.0-flash-exp"  # Disponible en v1beta
 
 # Credenciales Aircall para renovar URLs expiradas
 AIRCALL_ID    = os.getenv("AIRCALL_ID")
