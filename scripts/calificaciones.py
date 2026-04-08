@@ -104,35 +104,39 @@ TRANSCRIPCIÓN:
 """
 
 
-def llamar_gemini_json(prompt: str, transcripcion: str) -> dict:
+def llamar_openai_json(prompt: str, transcripcion: str) -> dict:
     """
-    Envía el prompt + transcripción a Gemini y parsea el JSON de respuesta.
-    Nota: Si Gemini no responde JSON puro, se intenta extraer el bloque JSON.
+    Envía el prompt + transcripción a OpenAI GPT-4o-mini y parsea el JSON.
     """
-    texto_completo = prompt + "\n\n" + transcripcion
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        print("  [ERROR] OPENAI_API_KEY no encontrada.")
+        return {"error": "no_api_key"}
 
-    model = genai.GenerativeModel(MODEL_NAME)
-    response = model.generate_content(texto_completo)
-    texto_respuesta = response.text.strip()
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {api_key}"
+    }
 
-    # Intentar parsear directo
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {"role": "system", "content": "Eres un asistente experto en análisis de llamadas que siempre responde en formato JSON puro."},
+            {"role": "user", "content": prompt + "\n\nTRANSCRIPCIÓN:\n" + transcripcion}
+        ],
+        "response_format": { "type": "json_object" },
+        "temperature": 0
+    }
+
     try:
-        return json.loads(texto_respuesta)
-    except json.JSONDecodeError:
-        pass
-
-    # Intentar extraer bloque JSON si viene con markdown
-    inicio = texto_respuesta.find("{")
-    fin = texto_respuesta.rfind("}") + 1
-    if inicio != -1 and fin > inicio:
-        try:
-            return json.loads(texto_respuesta[inicio:fin])
-        except json.JSONDecodeError:
-            pass
-
-    # Fallback: retornar texto como error
-    print(f"  [WARN] No se pudo parsear JSON de Gemini. Respuesta: {texto_respuesta[:200]}")
-    return {"error": texto_respuesta}
+        resp = requests.post("https://api.openai.com/v1/chat/completions", headers=headers, json=payload, timeout=60)
+        resp.raise_for_status()
+        data = resp.json()
+        content = data["choices"][0]["message"]["content"]
+        return json.loads(content)
+    except Exception as e:
+        print(f"  [ERROR] Al llamar a OpenAI: {e}")
+        return {"error": str(e)}
 
 
 def calificar_ventas(registros: list) -> tuple[float, float]:
@@ -150,8 +154,8 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
         mes_anio = datetime.now().strftime("%Y-%m")
 
         # ── Calificar Lead ──
-        print(f"  → [{call_id}] Calificando lead...")
-        resultado_lead = llamar_gemini_json(PROMPT_CALIDAD_LEAD, transcripcion)
+        print(f"  → [{call_id}] Calificando lead con OpenAI...")
+        resultado_lead = llamar_openai_json(PROMPT_CALIDAD_LEAD, transcripcion)
         if "error" not in resultado_lead:
             try:
                 crear_registro("calificaciones_leads", {
@@ -169,8 +173,8 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
                 print(f"  [ERROR] No se pudo guardar calificacion_lead: {e}")
 
         # ── Calificar Closer ──
-        print(f"  → [{call_id}] Calificando closer...")
-        resultado_closer = llamar_gemini_json(PROMPT_CALIDAD_CLOSER, transcripcion)
+        print(f"  → [{call_id}] Calificando closer con OpenAI...")
+        resultado_closer = llamar_openai_json(PROMPT_CALIDAD_CLOSER, transcripcion)
         if "error" not in resultado_closer:
             desglose = resultado_closer.get("desglose", {})
             try:
@@ -208,8 +212,8 @@ def calificar_onboarding(registros: list) -> float:
         fecha = r.get("Fecha", "")
         mes_anio = datetime.now().strftime("%Y-%m")
 
-        print(f"  → [{call_id}] Calificando onboarding...")
-        resultado = llamar_gemini_json(PROMPT_CALIDAD_ONBOARDING, transcripcion)
+        print(f"  → [{call_id}] Calificando onboarding con OpenAI...")
+        resultado = llamar_openai_json(PROMPT_CALIDAD_ONBOARDING, transcripcion)
         if "error" not in resultado:
             desglose = resultado.get("desglose", {})
             try:
