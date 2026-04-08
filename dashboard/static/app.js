@@ -56,9 +56,9 @@ function switchTab(tab, el) {
     el.classList.add("active");
 
     const titles = {
-        metricas: ["Rendimiento del Equipo", "Semáforo de calidad · Actualizado hoy"],
-        agentes: ["Gestión de Agentes", "Alta, edición y control de agentes activos"],
-        evolucion: ["Evolución Histórica", "Curva de mejora mensual por categoría"],
+        metricas: ["Rendimiento de Ventas", "Setters & Closers · Semáforo de calidad"],
+        agentes: ["Gestión del Equipo", "Alta y edición de Setters y Closers"],
+        evolucion: ["Evolución de Calidad", "Histórico de desempeño mensual"],
     };
     document.getElementById("pageTitle").textContent = titles[tab][0];
     document.getElementById("pageSub").textContent = titles[tab][1];
@@ -99,7 +99,7 @@ function renderizarAgentes(agentes, filtro = "todos") {
 
     if (!filtrados.length) {
         grid.innerHTML = `<p style="color:var(--text-muted);grid-column:1/-1;text-align:center;padding:48px">
-      No hay agentes ${filtro !== "todos" ? `de tipo <b>${filtro}</b>` : ""} con datos.</p>`;
+      No hay datos para <b>${filtro === 'setter' ? 'Setters' : (filtro === 'closer' ? 'Closers' : 'agentes')}</b> en este periodo.</p>`;
         return;
     }
 
@@ -107,15 +107,15 @@ function renderizarAgentes(agentes, filtro = "todos") {
 }
 
 function tarjetaAgente(a) {
-    const nivel = a.semaforo.nivel;
-    const color = a.semaforo.color;
+    const nivel = a.semaforo?.nivel || "sin_datos";
+    const color = a.semaforo?.color || "var(--gray)";
     const scoreVal = a.promedio !== null ? a.promedio.toFixed(1) : "—";
     const scoreWidth = a.promedio !== null ? (a.promedio / 10 * 100) : 0;
     const avatarClass = `avatar-${a.tipo}`;
-    const iniciales = a.nombre.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+    const iniciales = (a.nombre || "??").split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
 
-    const tipoLabel = { closer: "Closer · Ventas", soporte: "Servicio al Cliente", onboarding: "Coach · Onboarding" };
-    const tendenciaIcon = { subiendo: "↑ Subiendo", bajando: "↓ Bajando", estable: "→ Estable" };
+    const tipoLabel = { closer: "Closer (Cierre)", setter: "Setter (Agendamiento)" };
+    const tendenciaIcon = { subiendo: "↑ Subiendo", bajando: "↓ Bajando", estable: "→ Estable", null: "—" };
     const tendenciaClass = `tendencia-${a.tendencia || "estable"}`;
 
     return `
@@ -124,16 +124,16 @@ function tarjetaAgente(a) {
         <div class="agent-avatar ${avatarClass}">${iniciales}</div>
         <div class="agent-name">${a.nombre}</div>
         <div class="semaforo-badge semaforo-${nivel}">
-          ${a.semaforo.emoji} ${a.semaforo.label}
+          ${a.semaforo?.emoji || "❔"} ${a.semaforo?.label || "Sin Datos"}
         </div>
       </div>
 
       <div class="agent-tipo-badge">${tipoLabel[a.tipo] || a.tipo}</div>
 
       <div class="agent-score">
-        <span class="score-val" style="color:${color}">${scoreVal}</span>
+        <span class="score-val">${scoreVal}</span>
         <span class="score-max">/10</span>
-        <span class="score-label">promedio</span>
+        <span class="score-label">score</span>
       </div>
 
       <div class="score-bar">
@@ -141,7 +141,7 @@ function tarjetaAgente(a) {
       </div>
 
       <div class="agent-meta">
-        <span style="color:var(--text-muted)">📞 ${a.total_llamadas} llamadas</span>
+        <span>📞 ${a.total_llamadas} llamadas</span>
         <span class="${tendenciaClass}">${tendenciaIcon[a.tendencia] || "—"}</span>
       </div>
     </div>
@@ -161,11 +161,15 @@ async function verDetalle(id) {
     const agente = _todosAgentes.find(a => a.id === id);
     if (!agente) return;
 
-    document.getElementById("detalleNombre").textContent = `${agente.nombre} · ${agente.semaforo.emoji} ${agente.semaforo.label}`;
+    const emoji = agente.semaforo?.emoji || "";
+    const label = agente.semaforo?.label || "Sin datos";
+    document.getElementById("detalleNombre").innerHTML = `
+        <span style="color:var(--text-muted); font-size:14px; display:block; text-transform:uppercase;">Detalle de Rendimiento</span>
+        ${agente.nombre} <small style="font-size:13px; font-weight:normal; margin-left:10px;">· ${emoji} ${label}</small>
+    `;
     document.getElementById("detalleContent").innerHTML = renderizarDetalle(agente);
     document.getElementById("detalleOverlay").classList.add("open");
 
-    // Gráfica de historial
     if (agente.historial && agente.historial.length > 1) {
         setTimeout(() => renderizarMiniChart(agente), 100);
     }
@@ -177,41 +181,44 @@ function renderizarDetalle(a) {
     const prom = a.promedio !== null ? a.promedio.toFixed(1) : "—";
 
     const desglose = Object.entries(a.desglose || {}).map(([label, val]) => `
-    <div class="desglose-item">
-      <div class="desglose-label">${label}</div>
-      <div class="desglose-bar-wrap">
-        <div class="desglose-bar"><div class="desglose-fill" style="width:${val * 10}%"></div></div>
-        <span class="desglose-val">${val}</span>
+    <div class="desglose-item" style="margin-bottom:15px">
+      <div style="display:flex; justify-content:space-between; margin-bottom:5px">
+        <span style="font-size:12px; font-weight:600; color:var(--text-dim)">${label}</span>
+        <span style="font-size:12px; font-weight:bold">${val}/10</span>
+      </div>
+      <div style="height:6px; background:rgba(255,255,255,0.05); border-radius:10px; overflow:hidden">
+        <div style="height:100%; width:${val * 10}%; background:var(--accent); border-radius:10px"></div>
       </div>
     </div>
   `).join("");
 
-    const hasChart = a.historial && a.historial.length > 1;
-
     return `
     <div class="detalle-body">
-      <div class="detalle-kpis">
-        <div class="detalle-kpi">
-          <div class="detalle-kpi-val" style="color:${a.semaforo.color}">${prom}</div>
-          <div class="detalle-kpi-label">Promedio</div>
+      <div class="kpi-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:30px">
+        <div class="kpi-card" style="padding:15px">
+          <div class="kpi-val" style="font-size:24px">${prom}</div>
+          <div class="kpi-label" style="font-size:10px">Promedio</div>
         </div>
-        <div class="detalle-kpi">
-          <div class="detalle-kpi-val" style="color:var(--green)">${mejor}</div>
-          <div class="detalle-kpi-label">Mejor</div>
+        <div class="kpi-card" style="padding:15px">
+          <div class="kpi-val" style="font-size:24px; color:var(--green)">${mejor}</div>
+          <div class="kpi-label" style="font-size:10px">Máximo</div>
         </div>
-        <div class="detalle-kpi">
-          <div class="detalle-kpi-val" style="color:var(--red)">${peor}</div>
-          <div class="detalle-kpi-label">Peor</div>
+        <div class="kpi-card" style="padding:15px">
+          <div class="kpi-val" style="font-size:24px; color:var(--red)">${peor}</div>
+          <div class="kpi-label" style="font-size:10px">Mínimo</div>
         </div>
       </div>
 
-      ${desglose ? `<div class="desglose-grid">${desglose}</div>` : ""}
-
-      ${hasChart ? `
-        <div class="detalle-chart-wrap">
-          <div class="detalle-chart-title">Evolución de calificaciones</div>
-          <canvas id="detalleChart" height="100"></canvas>
-        </div>` : ""}
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:40px">
+        <div>
+          <h4 style="font-size:13px; text-transform:uppercase; color:var(--text-muted); margin-bottom:20px; letter-spacing:1px">Desglose por área</h4>
+          ${desglose || "<p>Sin desglose disponible</p>"}
+        </div>
+        <div id="miniChartContainer">
+           <h4 style="font-size:13px; text-transform:uppercase; color:var(--text-muted); margin-bottom:20px; letter-spacing:1px">Tendencia</h4>
+           <canvas id="detalleChart" height="200"></canvas>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -221,7 +228,8 @@ function renderizarMiniChart(agente) {
     if (!ctx) return;
     if (_detalleChart) _detalleChart.destroy();
 
-    const labels = agente.historial.map(h => h.fecha || "");
+    const color = agente.semaforo?.color || "#8b5cf6";
+    const labels = agente.historial.map((h, i) => i + 1);
     const data = agente.historial.map(h => h.calificacion);
 
     _detalleChart = new Chart(ctx, {
@@ -230,19 +238,19 @@ function renderizarMiniChart(agente) {
             labels,
             datasets: [{
                 data,
-                borderColor: agente.semaforo.color,
-                backgroundColor: agente.semaforo.color + "20",
+                borderColor: color,
+                backgroundColor: color + "20",
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
-                pointBackgroundColor: agente.semaforo.color,
+                pointBackgroundColor: color,
             }]
         },
         options: {
             plugins: { legend: { display: false } },
             scales: {
-                y: { min: 0, max: 10, grid: { color: "rgba(255,255,255,0.05)" }, ticks: { color: "#64748b" } },
-                x: { grid: { display: false }, ticks: { color: "#64748b", maxRotation: 0 } }
+                y: { min: 0, max: 10, ticks: { color: "#64748b", font: { size: 10 } }, grid: { color: "rgba(255,255,255,0.05)" } },
+                x: { ticks: { color: "#64748b", font: { size: 10 } }, grid: { display: false } }
             }
         }
     });
@@ -251,7 +259,6 @@ function renderizarMiniChart(agente) {
 function cerrarDetalle(e) {
     if (e && e.target !== document.getElementById("detalleOverlay")) return;
     document.getElementById("detalleOverlay").classList.remove("open");
-    if (_detalleChart) { _detalleChart.destroy(); _detalleChart = null; }
 }
 
 // ─── MÓDULO: TABLA DE AGENTES ─────────────────────────────────
@@ -271,25 +278,23 @@ async function cargarTablaAgentes() {
 function renderizarTabla(agentes) {
     const tbody = document.getElementById("agentesTableBody");
     if (!agentes.length) {
-        tbody.innerHTML = `<tr><td colspan="6" class="loading-cell">No hay agentes registrados. Agrega el primero ↑</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="6" class="loading-cell">No hay agentes. Agregue el primero ↑</td></tr>`;
         return;
     }
 
-    const tipoLabel = { closer: "Closer", soporte: "Soporte", onboarding: "Onboarding" };
+    const tipoLabel = { closer: "Closer (Vendedor)", setter: "Setter (Agendador)" };
 
     tbody.innerHTML = agentes.map(a => `
     <tr>
       <td style="color:var(--text-primary);font-weight:600">${a.nombre}</td>
-      <td><span class="tipo-pill tipo-${a.tipo}">${tipoLabel[a.tipo] || a.tipo}</span></td>
-      <td>${a.email_fathom || "<span style='color:var(--text-muted)'>—</span>"}</td>
-      <td class="${a.activo ? 'estado-activo' : 'estado-inactivo'}">${a.activo ? "● Activo" : "○ Inactivo"}</td>
+      <td><span class="tipo-pill ${a.tipo === 'closer' ? 'tipo-closer' : 'tipo-onboarding'}">${tipoLabel[a.tipo] || a.tipo}</span></td>
+      <td>${a.email_fathom || "—"}</td>
+      <td class="${a.activo ? 'estado-activo' : 'estado-inactivo'}">${a.activo ? "Activo" : "Inactivo"}</td>
       <td>${formatFecha(a.fecha_registro)}</td>
       <td>
         <div class="action-btns">
-          <button class="btn-action" onclick="editarAgente(${a.Id})" title="Editar">✏️ Editar</button>
-          <button class="btn-action danger" onclick="toggleAgente(${a.Id}, ${a.activo})" title="${a.activo ? 'Desactivar' : 'Activar'}">
-            ${a.activo ? "⏸ Pausar" : "▶️ Activar"}
-          </button>
+          <button class="btn-action" onclick="editarAgente(${a.Id})">✏️</button>
+          <button class="btn-action danger" onclick="toggleAgente(${a.Id}, ${a.activo})">${a.activo ? "⏸" : "▶️"}</button>
         </div>
       </td>
     </tr>
@@ -422,63 +427,29 @@ function renderizarEvolucion(registros) {
     if (!ctx) return;
     if (_evolucionChart) _evolucionChart.destroy();
 
-    const labels = registros.map(r => r["mes_año"] || r.mes_año || "");
-    const closers = registros.map(r => r.promedio_calidad_closers || 0);
-    const onboard = registros.map(r => r.promedio_calidad_onboarding || 0);
-    const leads = registros.map(r => r.promedio_calidad_leads || 0);
-
-    const makeDataset = (label, data, color) => ({
-        label,
-        data,
-        borderColor: color,
-        backgroundColor: color + "18",
-        fill: true,
-        tension: 0.4,
-        pointRadius: 5,
-        pointHoverRadius: 7,
-        pointBackgroundColor: color,
-        borderWidth: 2.5,
-    });
+    const labels = registros.map(r => r["mes_año"]);
+    const closers = registros.map(r => r.promedio_calidad_closers);
+    const setters = registros.map(r => r.promedio_calidad_setters);
+    const leads = registros.map(r => r.promedio_calidad_leads);
 
     _evolucionChart = new Chart(ctx, {
         type: "line",
         data: {
             labels,
             datasets: [
-                makeDataset("Closers", closers, "#6366f1"),
-                makeDataset("Onboarding", onboard, "#22c55e"),
-                makeDataset("Leads", leads, "#f59e0b"),
+                { label: "Closers", data: closers, borderColor: "#8b5cf6", backgroundColor: "#8b5cf620", fill: true, tension: 0.4 },
+                { label: "Setters", data: setters, borderColor: "#10b981", backgroundColor: "#10b98120", fill: true, tension: 0.4 },
+                { label: "Leads", data: leads, borderColor: "#f59e0b", backgroundColor: "#f59e0b20", fill: true, tension: 0.4 },
             ]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
-            plugins: {
-                legend: { display: false },
-                tooltip: {
-                    backgroundColor: "#1e293b",
-                    borderColor: "rgba(255,255,255,0.1)",
-                    borderWidth: 1,
-                    titleColor: "#f1f5f9",
-                    bodyColor: "#94a3b8",
-                    padding: 12,
-                    callbacks: {
-                        label: ctx => ` ${ctx.dataset.label}: ${ctx.raw.toFixed(1)}/10`,
-                    }
-                }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    min: 0, max: 10,
-                    grid: { color: "rgba(255,255,255,0.05)" },
-                    ticks: { color: "#64748b", stepSize: 2 }
-                },
-                x: {
-                    grid: { display: false },
-                    ticks: { color: "#64748b" }
-                }
-            },
-            interaction: { mode: "index", intersect: false },
+                y: { min: 0, max: 10, grid: { color: "rgba(255,255,255,0.05)" }, ticks: { color: "#64748b" } },
+                x: { grid: { display: false }, ticks: { color: "#64748b" } }
+            }
         }
     });
 }

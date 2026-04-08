@@ -63,33 +63,32 @@
     <!-- KPI CARDS -->
     <div class="kpi-grid" id="kpiGrid">
       <div class="kpi-card loading-pulse">
-        <div class="kpi-icon">🟢</div>
+        <div class="kpi-icon">🎯</div>
         <div class="kpi-val" id="kpiExcelente">—</div>
-        <div class="kpi-label">Excelentes</div>
+        <div class="kpi-label">Rendimiento Top</div>
       </div>
       <div class="kpi-card loading-pulse">
-        <div class="kpi-icon">🟡</div>
+        <div class="kpi-icon">⚡</div>
         <div class="kpi-val" id="kpiRegular">—</div>
-        <div class="kpi-label">Regulares</div>
+        <div class="kpi-label">En Seguimiento</div>
       </div>
       <div class="kpi-card loading-pulse">
-        <div class="kpi-icon">🔴</div>
+        <div class="kpi-icon">⚠️</div>
         <div class="kpi-val" id="kpiCritico">—</div>
-        <div class="kpi-label">Críticos</div>
+        <div class="kpi-label">Bajo Promedio</div>
       </div>
       <div class="kpi-card loading-pulse">
-        <div class="kpi-icon">📞</div>
+        <div class="kpi-icon">🏢</div>
         <div class="kpi-val" id="kpiTotal">—</div>
-        <div class="kpi-label">Total Agentes</div>
+        <div class="kpi-label">Equipo Activo</div>
       </div>
     </div>
 
     <!-- FILTRO POR TIPO -->
     <div class="filter-row">
       <button class="filter-btn active" data-filter="todos" onclick="filtrarAgentes('todos', this)">Todos</button>
-      <button class="filter-btn" data-filter="closer" onclick="filtrarAgentes('closer', this)">Closers</button>
-      <button class="filter-btn" data-filter="soporte" onclick="filtrarAgentes('soporte', this)">Soporte</button>
-      <button class="filter-btn" data-filter="onboarding" onclick="filtrarAgentes('onboarding', this)">Onboarding</button>
+      <button class="filter-btn" data-filter="setter" onclick="filtrarAgentes('setter', this)">Setters (Agendamiento)</button>
+      <button class="filter-btn" data-filter="closer" onclick="filtrarAgentes('closer', this)">Closers (Cierre)</button>
     </div>
 
     <!-- GRID DE AGENTES CON SEMÁFORO -->
@@ -130,18 +129,18 @@
   <!-- ═══════════════════ TAB: EVOLUCIÓN ═══════════════════ -->
   <section class="tab-content" id="tab-evolucion">
     <div class="section-header">
-      <h2 class="section-title">Curva de Mejora Mensual</h2>
-      <p style="color:var(--text-muted);font-size:13px;">Evolución de promedios de calidad por categoría</p>
+      <h2 class="section-title">Análisis Histórico</h2>
+      <p style="color:var(--text-muted);font-size:13px;">Evolución de calidad por departamento</p>
     </div>
 
-    <div class="chart-container-big">
+    <div class="chart-container-big" style="background:var(--bg-card); border-radius:var(--radius); padding:30px; border:1px solid var(--border);">
       <canvas id="evolucionChart"></canvas>
     </div>
 
-    <div class="evol-legend">
-      <span class="legend-dot" style="background:#6366f1"></span> Closers &nbsp;&nbsp;
-      <span class="legend-dot" style="background:#22c55e"></span> Onboarding &nbsp;&nbsp;
-      <span class="legend-dot" style="background:#f59e0b"></span> Leads
+    <div class="evol-legend" style="margin-top:20px; text-align:center;">
+      <span class="legend-dot" style="background:#8b5cf6; display:inline-block; width:12px; height:12px; border-radius:50%;"></span> Closers &nbsp;&nbsp;
+      <span class="legend-dot" style="background:#10b981; display:inline-block; width:12px; height:12px; border-radius:50%;"></span> Setters &nbsp;&nbsp;
+      <span class="legend-dot" style="background:#f59e0b; display:inline-block; width:12px; height:12px; border-radius:50%;"></span> Calidad Leads
     </div>
   </section>
 
@@ -162,11 +161,10 @@
         <input type="text" id="fNombre" placeholder="Ej: Carlos Méndez" required />
       </div>
       <div class="form-group">
-        <label>Tipo *</label>
+        <label>Tipo de Agente *</label>
         <select id="fTipo" required>
-          <option value="closer">Closer (Ventas)</option>
-          <option value="soporte">Soporte al Cliente</option>
-          <option value="onboarding">Coach de Onboarding</option>
+          <option value="setter">Setter (Agendador)</option>
+          <option value="closer">Closer (Vendedor)</option>
         </select>
       </div>
       <div class="form-group">
@@ -174,13 +172,13 @@
         <input type="email" id="fEmail" placeholder="email@empresa.com" />
       </div>
       <div class="form-group">
-        <label class="toggle-label">
+        <label class="toggle-label" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
           <input type="checkbox" id="fActivo" checked />
-          <span class="toggle-text">Activo (incluir en reportes)</span>
+          <span class="toggle-text" style="font-size:13px; color:var(--text-dim);">Agente Activo</span>
         </label>
       </div>
 
-      <div class="modal-footer">
+      <div class="modal-footer" style="padding:24px; border-top:1px solid var(--border); display:flex; gap:10px; justify-content:flex-end;">
         <button type="button" class="btn-secondary" onclick="cerrarModal()">Cancelar</button>
         <button type="submit" class="btn-primary" id="btnGuardar">Guardar Agente</button>
       </div>
@@ -190,14 +188,18 @@
 
 <!-- ═══════════════════ MODAL DETALLE AGENTE ═══════════════════ -->
 <div class="modal-overlay" id="detalleOverlay" onclick="cerrarDetalle(event)">
-  <div class="modal modal-wide" id="detalleModal">
+  <div class="modal modal-wide" id="detalleModal" style="background:var(--bg-base); backdrop-filter:blur(20px);">
     <div class="modal-header">
       <h3 id="detalleNombre">—</h3>
       <button class="modal-close" onclick="cerrarDetalle()">✕</button>
     </div>
-    <div id="detalleContent"><!-- JS --></div>
+    <div id="detalleContent" style="padding:32px;"><!-- JS --></div>
   </div>
 </div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
 
 <script src="/static/app.js"></script>
 </body>

@@ -43,21 +43,18 @@ NOCODB_CONFIGURED = bool(NOCODB_API_TOKEN and NOCODB_PROJECT_ID)
 DEMO_AGENTES = [
     {"Id": 1, "nombre": "Carlos Méndez", "tipo": "closer", "email_fathom": "carlos@empresa.com", "activo": True, "fecha_registro": "2025-01-10"},
     {"Id": 2, "nombre": "Laura Gómez", "tipo": "closer", "email_fathom": "laura@empresa.com", "activo": True, "fecha_registro": "2025-01-15"},
-    {"Id": 3, "nombre": "Miguel Torres", "tipo": "soporte", "email_fathom": "miguel@empresa.com", "activo": True, "fecha_registro": "2025-02-01"},
-    {"Id": 4, "nombre": "Ana Ruiz", "tipo": "soporte", "email_fathom": "ana@empresa.com", "activo": True, "fecha_registro": "2025-02-10"},
-    {"Id": 5, "nombre": "Pedro Salinas", "tipo": "onboarding", "email_fathom": "pedro@empresa.com", "activo": True, "fecha_registro": "2025-01-20"},
-    {"Id": 6, "nombre": "Sofía Vega", "tipo": "onboarding", "email_fathom": "sofia@empresa.com", "activo": False, "fecha_registro": "2025-03-01"},
+    {"Id": 3, "nombre": "Miguel Torres", "tipo": "setter", "email_fathom": "miguel@empresa.com", "activo": True, "fecha_registro": "2025-02-01"},
+    {"Id": 4, "nombre": "Ana Ruiz", "tipo": "setter", "email_fathom": "ana@empresa.com", "activo": True, "fecha_registro": "2025-02-10"},
+]
+
+DEMO_CALIFICACIONES_SETTERS = [
+    {"nombre_setter": "Miguel Torres", "calificacion_total": 8.5, "rapport": 9, "identificacion_dolor": 8, "venta_cita": 9, "manejo_objeciones": 8, "resultado": "sí", "fecha_llamada": "2026-03-01", "mes_año": "2026-03"},
+    {"nombre_setter": "Ana Ruiz", "calificacion_total": 7.0, "rapport": 7, "identificacion_dolor": 7, "venta_cita": 7, "manejo_objeciones": 7, "resultado": "no", "fecha_llamada": "2026-03-02", "mes_año": "2026-03"},
 ]
 
 DEMO_CALIFICACIONES_CLOSERS = [
     {"nombre_closer": "Carlos Méndez", "calificacion_total": 9, "calificacion_rapport": 9, "calificacion_descubrimiento": 8, "calificacion_presentacion": 9, "calificacion_objeciones": 9, "calificacion_cierre": 10, "resultado": "vendió", "fecha_llamada": "2026-03-01", "mes_año": "2026-03"},
-    {"nombre_closer": "Carlos Méndez", "calificacion_total": 8, "calificacion_rapport": 8, "calificacion_descubrimiento": 9, "calificacion_presentacion": 8, "calificacion_objeciones": 7, "calificacion_cierre": 8, "resultado": "vendió", "fecha_llamada": "2026-03-05", "mes_año": "2026-03"},
-    {"nombre_closer": "Carlos Méndez", "calificacion_total": 9, "calificacion_rapport": 10, "calificacion_descubrimiento": 9, "calificacion_presentacion": 9, "calificacion_objeciones": 8, "calificacion_cierre": 9, "resultado": "vendió", "fecha_llamada": "2026-03-07", "mes_año": "2026-03"},
     {"nombre_closer": "Laura Gómez", "calificacion_total": 6, "calificacion_rapport": 6, "calificacion_descubrimiento": 5, "calificacion_presentacion": 7, "calificacion_objeciones": 5, "calificacion_cierre": 6, "resultado": "no vendió", "fecha_llamada": "2026-03-02", "mes_año": "2026-03"},
-    {"nombre_closer": "Laura Gómez", "calificacion_total": 5, "calificacion_rapport": 6, "calificacion_descubrimiento": 4, "calificacion_presentacion": 5, "calificacion_objeciones": 4, "calificacion_cierre": 5, "resultado": "no vendió", "fecha_llamada": "2026-03-06", "mes_año": "2026-03"},
-    {"nombre_closer": "Laura Gómez", "calificacion_total": 4, "calificacion_rapport": 5, "calificacion_descubrimiento": 3, "calificacion_presentacion": 4, "calificacion_objeciones": 4, "calificacion_cierre": 3, "resultado": "no vendió", "fecha_llamada": "2026-03-08", "mes_año": "2026-03"},
-    {"nombre_closer": "Miguel Torres", "calificacion_total": 7, "calificacion_rapport": 7, "calificacion_descubrimiento": 7, "calificacion_presentacion": 7, "calificacion_objeciones": 7, "calificacion_cierre": 7, "resultado": "seguimiento pendiente", "fecha_llamada": "2026-03-03", "mes_año": "2026-03"},
-    {"nombre_closer": "Ana Ruiz", "calificacion_total": 8, "calificacion_rapport": 8, "calificacion_descubrimiento": 8, "calificacion_presentacion": 9, "calificacion_objeciones": 8, "calificacion_cierre": 8, "resultado": "vendió", "fecha_llamada": "2026-03-04", "mes_año": "2026-03"},
 ]
 
 DEMO_CALIFICACIONES_ONBOARDING = [
@@ -108,12 +105,12 @@ def get_calificaciones_por_nombre(tabla: str, campo_nombre: str, nombre: str) ->
 
 def get_calificaciones_demo(tipo: str, nombre: str) -> list:
     """Retorna calificaciones del store de demo."""
-    if tipo in ("closer", "soporte"):
+    if tipo == "closer":
         return [c for c in DEMO_CALIFICACIONES_CLOSERS
                 if c["nombre_closer"].lower() == nombre.lower()]
-    if tipo == "onboarding":
-        return [c for c in DEMO_CALIFICACIONES_ONBOARDING
-                if c["nombre_coach"].lower() == nombre.lower()]
+    if tipo == "setter":
+        return [c for c in DEMO_CALIFICACIONES_SETTERS
+                if c["nombre_setter"].lower() == nombre.lower()]
     return []
 
 
@@ -123,26 +120,31 @@ def metricas_agente(agente: dict) -> dict:
     tipo = agente["tipo"]
 
     if NOCODB_CONFIGURED:
-        if tipo in ("closer", "soporte"):
+        if tipo == "closer":
             calificaciones = get_calificaciones_por_nombre(
                 "calificaciones_closers", "Closer", nombre
             )
             campo_total = "Nota Total"
+            dims = ["Rapport", "Descubrimiento", "Presentación", "Objeciones", "Cierre"]
         elif tipo == "setter":
             calificaciones = get_calificaciones_por_nombre(
-                "calificaciones_leads", "ID Llamada", "" # Para leads, buscamos todos los registros por ahora o por ID
-            )
-            # Para Setters/Leads, no buscamos por nombre exacto porque el prompt actual no extrae 'nombre_setter'
-            # pero podemos mostrar el promedio global de la tabla.
-            campo_total = "Calificación"
-        else:
-            calificaciones = get_calificaciones_por_nombre(
-                "calificaciones_onboarding", "Coach", nombre
+                "calificaciones_setters", "Setter", nombre
             )
             campo_total = "Nota Total"
+            dims = ["Rapport", "Identificación Dolor", "Venta Cita", "Objeciones"]
+        else:
+            calificaciones = []
+            campo_total = "Nota Total"
+            dims = []
     else:
         calificaciones = get_calificaciones_demo(tipo, nombre)
         campo_total = "calificacion_total"
+        if tipo == "closer":
+            dims = ["calificacion_rapport", "calificacion_descubrimiento", "calificacion_presentacion", "calificacion_objeciones", "calificacion_cierre"]
+        elif tipo == "setter":
+            dims = ["rapport", "identificacion_dolor", "venta_cita", "manejo_objeciones"]
+        else:
+            dims = []
 
     if not calificaciones:
         return {
@@ -161,17 +163,9 @@ def metricas_agente(agente: dict) -> dict:
 
     # Desglose promedio por dimensión
     desglose = {}
-    if tipo == "closer" or tipo == "soporte":
-        dims = ["Rapport", "Descubrimiento",
-                "Presentación", "Objeciones", "Cierre"]
-        labels = ["Rapport", "Descubrimiento", "Presentación", "Objeciones", "Cierre"]
-    else:
-        dims = ["Claridad", "Adaptación",
-                "Completitud", "Tiempo", "Satisfacción"]
-        labels = ["Claridad", "Adaptación", "Completitud", "Tiempo", "Satisfacción"]
-
-    for dim, label in zip(dims, labels):
+    for dim in dims:
         vals = [c.get(dim, 0) for c in calificaciones if c.get(dim) is not None]
+        label = dim.replace("calificacion_", "").replace("_", " ").title()
         desglose[label] = round(sum(vals) / len(vals), 1) if vals else 0
 
     # Historial para gráfica
@@ -315,12 +309,12 @@ def api_resumen_mensual():
 
     # Demo: últimos 6 meses
     demo = [
-        {"mes_año": "2025-10", "promedio_calidad_leads": 6.5, "promedio_calidad_closers": 6.8, "promedio_calidad_onboarding": 7.0},
-        {"mes_año": "2025-11", "promedio_calidad_leads": 6.8, "promedio_calidad_closers": 7.0, "promedio_calidad_onboarding": 7.2},
-        {"mes_año": "2025-12", "promedio_calidad_leads": 7.0, "promedio_calidad_closers": 7.3, "promedio_calidad_onboarding": 7.5},
-        {"mes_año": "2026-01", "promedio_calidad_leads": 7.2, "promedio_calidad_closers": 7.5, "promedio_calidad_onboarding": 7.8},
-        {"mes_año": "2026-02", "promedio_calidad_leads": 7.8, "promedio_calidad_closers": 7.9, "promedio_calidad_onboarding": 8.1},
-        {"mes_año": "2026-03", "promedio_calidad_leads": 8.0, "promedio_calidad_closers": 8.2, "promedio_calidad_onboarding": 8.5},
+        {"mes_año": "2025-10", "promedio_calidad_leads": 6.5, "promedio_calidad_closers": 6.8, "promedio_calidad_setters": 6.0},
+        {"mes_año": "2025-11", "promedio_calidad_leads": 6.8, "promedio_calidad_closers": 7.0, "promedio_calidad_setters": 6.5},
+        {"mes_año": "2025-12", "promedio_calidad_leads": 7.0, "promedio_calidad_closers": 7.3, "promedio_calidad_setters": 7.0},
+        {"mes_año": "2026-01", "promedio_calidad_leads": 7.2, "promedio_calidad_closers": 7.5, "promedio_calidad_setters": 7.5},
+        {"mes_año": "2026-02", "promedio_calidad_leads": 7.8, "promedio_calidad_closers": 7.9, "promedio_calidad_setters": 8.0},
+        {"mes_año": "2026-03", "promedio_calidad_leads": 8.0, "promedio_calidad_closers": 8.2, "promedio_calidad_setters": 8.3},
     ]
     return jsonify({"demo": True, "datos": demo})
 
