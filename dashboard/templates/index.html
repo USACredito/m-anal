@@ -99,10 +99,17 @@
   <section class="tab-content" id="tab-llamadas">
 
     <!-- Filtros llamadas -->
-    <div class="filter-row" style="margin-bottom:20px">
-      <button class="filter-btn active" data-filter="todos" onclick="filtrarLlamadas('todos', this)">Todas</button>
-      <button class="filter-btn" data-filter="setter" onclick="filtrarLlamadas('setter', this)">Setters</button>
-      <button class="filter-btn" data-filter="closer" onclick="filtrarLlamadas('closer', this)">Closers</button>
+    <div class="filter-row" style="margin-bottom:20px; display:flex; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+      <div>
+        <button class="filter-btn active" data-filter="todos" onclick="filtrarLlamadas('todos', this)">Todas</button>
+        <button class="filter-btn" data-filter="setter" onclick="filtrarLlamadas('setter', this)">Setters</button>
+        <button class="filter-btn" data-filter="closer" onclick="filtrarLlamadas('closer', this)">Closers</button>
+      </div>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <label for="fechaLlamadas" style="color:var(--text-muted); font-size:13px; font-weight:500;">Fecha:</label>
+        <input type="date" id="fechaLlamadas" class="date-input" onchange="filtrarPorFecha(this.value)" />
+        <button class="btn-clear" onclick="quitarFiltroFecha()" title="Limpiar filtro">✕</button>
+      </div>
     </div>
 
     <!-- Lista de llamadas -->

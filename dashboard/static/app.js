@@ -9,6 +9,7 @@ let _todosAgentes = [];
 let _todasLlamadas = { closers: [], setters: [] };
 let _filtroActual = "todos";
 let _filtroLlamadas = "todos";
+let _filtroFechaLlamadas = null;
 let _detalleChart = null;
 
 // ─── INICIALIZACIÓN ──────────────────────────────────────────
@@ -311,6 +312,17 @@ function filtrarLlamadas(filtro, btn) {
     renderizarLlamadas(filtro);
 }
 
+function filtrarPorFecha(fecha) {
+    _filtroFechaLlamadas = fecha; // "YYYY-MM-DD" o vacío
+    renderizarLlamadas(_filtroLlamadas);
+}
+
+function quitarFiltroFecha() {
+    _filtroFechaLlamadas = null;
+    document.getElementById("fechaLlamadas").value = "";
+    renderizarLlamadas(_filtroLlamadas);
+}
+
 function renderizarLlamadas(filtro) {
     const container = document.getElementById("llamadasContainer");
     let lista = [];
@@ -320,6 +332,14 @@ function renderizarLlamadas(filtro) {
     }
     if (filtro === "todos" || filtro === "setter") {
         (_todasLlamadas.setters || []).forEach(s => lista.push({ ...s, _tipo: "setter" }));
+    }
+
+    // Filtrar por fecha exacta si hay una seleccionada
+    if (_filtroFechaLlamadas) {
+        lista = lista.filter(c => {
+            const f = c["Fecha Llamada"] || "";
+            return f.startsWith(_filtroFechaLlamadas);
+        });
     }
 
     // Ordenar por fecha desc

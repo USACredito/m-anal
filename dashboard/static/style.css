@@ -665,15 +665,55 @@ body {
 }
 
 .filter-btn:hover {
-    border-color: var(--accent);
-    color: var(--accent);
+    background: var(--bg-card-hover);
 }
 
 .filter-btn.active {
     background: var(--accent);
     border-color: var(--accent);
-    color: white;
+    color: #fff;
+    box-shadow: 0 0 12px var(--accent-glow);
 }
+
+.date-input {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 13px;
+    outline: none;
+    color-scheme: dark;
+    transition: border-color 0.2s;
+}
+
+.date-input:focus {
+    border-color: var(--accent);
+}
+
+.btn-clear {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    border-radius: var(--radius-sm);
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.btn-clear:hover {
+    background: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+/* ── MODALS ─────────────────────────────────────────────── */
 
 /* ── AGENTS GRID ─────────────────────────────────────────── */
 
