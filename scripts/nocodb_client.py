@@ -55,6 +55,11 @@ def listar_registros(table_name: str, where: str = "", limit: int = 200) -> list
             params["where"] = where
 
         resp = requests.get(url, headers=HEADERS, params=params, timeout=15)
+
+        # 422 significa que el offset supera el total de registros → fin de paginación
+        if resp.status_code == 422:
+            break
+
         resp.raise_for_status()
         data = resp.json()
 
