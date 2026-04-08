@@ -130,8 +130,22 @@ def main():
         {"column_name": "recibe_onboarding", "title": "Onboarding", "uidt": "Checkbox"}
     ])
 
+    col_calif_setters = [
+        {"column_name": "nombre_setter", "title": "Setter", "uidt": "SingleLineText"},
+        {"column_name": "calificacion_total", "title": "Nota Total", "uidt": "Number"},
+        {"column_name": "rapport", "title": "Rapport", "uidt": "Number"},
+        {"column_name": "identificacion_dolor", "title": "Identificación Dolor", "uidt": "Number"},
+        {"column_name": "venta_cita", "title": "Venta Cita", "uidt": "Number"},
+        {"column_name": "manejo_objeciones", "title": "Objeciones", "uidt": "Number"},
+        {"column_name": "resultado", "title": "Agendó?", "uidt": "SingleLineText"},
+        {"column_name": "fecha_llamada", "title": "Fecha Llamada", "uidt": "Date"},
+        {"column_name": "mes_año", "title": "Mes-Año", "uidt": "SingleLineText"}
+    ]
+    create_table("calificaciones_setters", "Calificaciones Setters", col_calif_setters)
+
     create_table("resumen_mensual_calidad", "Resumen Mensual", [
         {"column_name": "mes_año", "title": "Mes-Año", "uidt": "SingleLineText"},
+        {"column_name": "promedio_calidad_setters", "title": "Promedio Setters", "uidt": "Number"},
         {"column_name": "promedio_calidad_leads", "title": "Promedio Leads", "uidt": "Number"},
         {"column_name": "promedio_calidad_closers", "title": "Promedio Closers", "uidt": "Number"},
         {"column_name": "promedio_calidad_onboarding", "title": "Promedio Onboarding", "uidt": "Number"},

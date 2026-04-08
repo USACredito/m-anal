@@ -28,6 +28,28 @@ MODEL_NAME = "gemini-1.5-flash-latest"
 
 # ─── PROMPTS DE CALIFICACIÓN ──────────────────────────────────────────────────
 
+PROMPT_CALIDAD_SETTER = """
+Analiza el desempeño del SETTER (la persona que busca agendar la cita) en esta transcripción y califica su llamada del 1 al 10 evaluando:
+- Rapport y conexión inicial con el prospecto
+- Identificación de dolores y necesidades del lead
+- Capacidad para "vender" la cita de estrategia
+- Manejo de objeciones iniciales
+- Profesionalismo y tono de voz profesional (según transcripción)
+
+Responde SOLO con un JSON válido:
+{
+  "calificacion_total": <número 1-10>,
+  "desglose": {
+    "rapport": <1-10>,
+    "identificacion_dolor": <1-10>,
+    "venta_cita": <1-10>,
+    "manejo_objeciones": <1-10>
+  },
+  "agendo_cita": "<sí | no>",
+  "nombre_setter": "<nombre del setter si se menciona, sino 'Desconocido'>"
+}
+"""
+
 PROMPT_CALIDAD_LEAD = """
 Basándote en la transcripción de esta llamada de ventas, evalúa la calidad del lead del 1 al 10 considerando:
 - Nivel de interés demostrado
@@ -155,7 +177,7 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
         mes_anio = datetime.now().strftime("%Y-%m")
 
         # ── Calificar Lead ──
-        print(f"  → [{call_id}] Calificando lead con OpenAI...")
+        print(f"  → [{call_id}] Evaluando calidad del LEAD...")
         resultado_lead = llamar_openai_json(PROMPT_CALIDAD_LEAD, transcripcion)
         if "error" not in resultado_lead:
             try:
@@ -172,6 +194,26 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
                 califs_leads.append(resultado_lead.get("calificacion", 0))
             except Exception as e:
                 print(f"  [ERROR] No se pudo guardar calificacion_lead: {e}")
+
+        # ── Calificar Setter ──
+        print(f"  → [{call_id}] Evaluando desempeño del SETTER...")
+        resultado_setter = llamar_openai_json(PROMPT_CALIDAD_SETTER, transcripcion)
+        if "error" not in resultado_setter:
+            desglose = resultado_setter.get("desglose", {})
+            try:
+                crear_registro("calificaciones_setters", {
+                    "Setter": resultado_setter.get("nombre_setter", "Desconocido"),
+                    "Nota Total": resultado_setter.get("calificacion_total", 0),
+                    "Rapport": desglose.get("rapport", 0),
+                    "Identificación Dolor": desglose.get("identificacion_dolor", 0),
+                    "Venta Cita": desglose.get("venta_cita", 0),
+                    "Objeciones": desglose.get("manejo_objeciones", 0),
+                    "Agendó?": resultado_setter.get("agendo_cita", ""),
+                    "Fecha Llamada": fecha,
+                    "Mes-Año": mes_anio,
+                })
+            except Exception as e:
+                print(f"  [ERROR] No se pudo guardar calificacion_setter: {e}")
 
         # ── Calificar Closer ──
         print(f"  → [{call_id}] Calificando closer con OpenAI...")
