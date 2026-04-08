@@ -14,6 +14,7 @@ import os
 import sys
 from datetime import datetime, date
 
+import requests as http_requests
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -432,6 +433,143 @@ def api_resumen_mensual():
         {"mes_año": "2026-03", "promedio_calidad_leads": 8.0, "promedio_calidad_closers": 8.2, "promedio_calidad_setters": 8.3},
     ]
     return jsonify({"demo": True, "datos": demo})
+
+
+@app.route("/api/chat", methods=["POST"])
+def api_chat():
+    """
+    Endpoint de chat con el agente IA.
+    Recibe una pregunta, obtiene contexto de NocoDB y responde con GPT-4o-mini.
+    Body JSON: { "mensaje": "...", "contexto": "setter|closer|todos", "limite": 300 }
+    """
+    api_key = os.getenv("OPENAI_API_KEY", "")
+    if not api_key:
+        return jsonify({"error": "OPENAI_API_KEY no configurada"}), 500
+
+    data = request.json or {}
+    mensaje = (data.get("mensaje") or "").strip()
+    contexto_tipo = (data.get("contexto") or "todos").lower()
+    limite = min(int(data.get("limite") or 300), 500)
+
+    if not mensaje:
+        return jsonify({"error": "Mensaje vacío"}), 400
+
+    # ── Recopilar datos de NocoDB para darle contexto al agente ──
+    datos_contexto = ""
+    try:
+        if NOCODB_CONFIGURED:
+            if contexto_tipo in ("setter", "todos"):
+                setters = listar_registros("calificaciones_setters")[-limite:]
+                if setters:
+                    resumen_setters = []
+                    for s in setters:
+                        item = {
+                            "setter": s.get("Setter", ""),
+                            "nota": s.get("Nota Total", 0),
+                            "agendo": s.get("Agendó?", ""),
+                            "fecha": s.get("Fecha Llamada", ""),
+                            "rapport": s.get("Rapport", 0),
+                            "dolor": s.get("Identificación Dolor", 0),
+                            "venta_cita": s.get("Venta Cita", 0),
+                            "objeciones": s.get("Objeciones", 0),
+                            "puntos_fuertes": s.get("Puntos Fuertes", ""),
+                            "areas_mejora": s.get("Áreas de Mejora", ""),
+                            "resumen": s.get("Resumen", ""),
+                        }
+                        resumen_setters.append(item)
+                    datos_contexto += f"\n\n=== CALIFICACIONES SETTERS (últimas {len(resumen_setters)}) ===\n"
+                    datos_contexto += json.dumps(resumen_setters, ensure_ascii=False, indent=None)
+
+            if contexto_tipo in ("closer", "todos"):
+                closers = listar_registros("calificaciones_closers")[-limite:]
+                if closers:
+                    resumen_closers = []
+                    for c in closers:
+                        item = {
+                            "closer": c.get("Closer", ""),
+                            "nota": c.get("Nota Total", 0),
+                            "resultado": c.get("Resultado", ""),
+                            "fecha": c.get("Fecha Llamada", ""),
+                            "rapport": c.get("Rapport", 0),
+                            "descubrimiento": c.get("Descubrimiento", 0),
+                            "presentacion": c.get("Presentación", 0),
+                            "objeciones": c.get("Objeciones", 0),
+                            "cierre": c.get("Cierre", 0),
+                            "puntos_fuertes": c.get("Puntos Fuertes", ""),
+                            "areas_mejora": c.get("Áreas de Mejora", ""),
+                            "resumen": c.get("Resumen", ""),
+                        }
+                        resumen_closers.append(item)
+                    datos_contexto += f"\n\n=== CALIFICACIONES CLOSERS (últimas {len(resumen_closers)}) ===\n"
+                    datos_contexto += json.dumps(resumen_closers, ensure_ascii=False, indent=None)
+
+            # Leads
+            leads = listar_registros("calificaciones_leads")[-limite:]
+            if leads:
+                resumen_leads = []
+                for l in leads:
+                    resumen_leads.append({
+                        "calificacion": l.get("Calificación", 0),
+                        "nivel": l.get("Nivel", ""),
+                        "justificacion": l.get("Justificación", ""),
+                        "positivos": l.get("Positivos", ""),
+                        "negativos": l.get("Negativos", ""),
+                        "fecha": l.get("Fecha Llamada", ""),
+                    })
+                datos_contexto += f"\n\n=== CALIDAD DE LEADS (últimas {len(resumen_leads)}) ===\n"
+                datos_contexto += json.dumps(resumen_leads, ensure_ascii=False, indent=None)
+
+    except Exception as e:
+        print(f"[CHAT] Error obteniendo contexto de NocoDB: {e}")
+        datos_contexto = "(No se pudo obtener datos de NocoDB)"
+
+    hoy = datetime.now().strftime("%Y-%m-%d")
+
+    system_prompt = f"""Eres el Analista IA del equipo de ventas. Tienes acceso a los datos reales de calificaciones de llamadas de venta.
+
+Fecha de hoy: {hoy}
+
+Tu rol es responder preguntas estratégicas del equipo de marketing y management basándote exclusivamente en los datos proporcionados. Puedes:
+- Identificar patrones en preguntas/objeciones frecuentes (Q&A)
+- Analizar qué dudas o objeciones se repiten más
+- Comparar desempeño entre setters o closers
+- Detectar tendencias por período
+- Sugerir mejoras de contenido de captación
+- Generar resúmenes estructurados por agente o período
+
+Responde en español, de forma clara y estructurada. Si la pregunta requiere datos que no están disponibles, indícalo.
+
+DATOS DISPONIBLES:
+{datos_contexto if datos_contexto else "No hay datos cargados actualmente."}
+"""
+
+    try:
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        }
+        payload = {
+            "model": "gpt-4o-mini",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": mensaje}
+            ],
+            "temperature": 0.3,
+            "max_tokens": 1500
+        }
+        resp = http_requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=60
+        )
+        resp.raise_for_status()
+        respuesta = resp.json()["choices"][0]["message"]["content"]
+        return jsonify({"respuesta": respuesta, "ok": True})
+
+    except Exception as e:
+        print(f"[CHAT] Error al llamar a OpenAI: {e}")
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

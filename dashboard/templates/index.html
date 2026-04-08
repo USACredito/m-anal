@@ -31,6 +31,10 @@
       <span class="nav-icon">📋</span>
       <span>Llamadas</span>
     </button>
+    <button class="nav-item" data-tab="analista" onclick="switchTab('analista', this)">
+      <span class="nav-icon">🤖</span>
+      <span>Analista IA</span>
+    </button>
   </nav>
 
   <div class="sidebar-footer">
@@ -117,6 +121,73 @@
       <p style="color:var(--text-muted);text-align:center;padding:48px">Cargando llamadas...</p>
     </div>
 
+  </section>
+
+  <!-- ═══════════════════ TAB: ANALISTA IA ═══════════════════ -->
+  <section class="tab-content" id="tab-analista">
+
+    <div class="chat-layout">
+
+      <!-- Panel izquierdo: configuración -->
+      <div class="chat-sidebar">
+        <h3 class="chat-sidebar-title">Configuración</h3>
+
+        <div class="chat-config-group">
+          <label class="chat-config-label">Datos a analizar</label>
+          <select id="chatContexto" class="chat-select">
+            <option value="todos">Todos (Setters + Closers)</option>
+            <option value="setter">Solo Setters</option>
+            <option value="closer">Solo Closers</option>
+          </select>
+        </div>
+
+        <div class="chat-config-group">
+          <label class="chat-config-label">Límite de registros</label>
+          <select id="chatLimite" class="chat-select">
+            <option value="100">Últimas 100 llamadas</option>
+            <option value="300" selected>Últimas 300 llamadas</option>
+            <option value="500">Últimas 500 llamadas</option>
+          </select>
+        </div>
+
+        <div class="chat-ejemplos">
+          <p class="chat-config-label" style="margin-bottom:10px">Consultas de ejemplo</p>
+          <button class="chat-ejemplo-btn" onclick="usarEjemplo(this)">¿Cuáles son las principales objeciones en llamadas de setting?</button>
+          <button class="chat-ejemplo-btn" onclick="usarEjemplo(this)">Dame un ranking de setters por tasa de agendamiento</button>
+          <button class="chat-ejemplo-btn" onclick="usarEjemplo(this)">¿Qué preguntas frecuentes hacen los leads?</button>
+          <button class="chat-ejemplo-btn" onclick="usarEjemplo(this)">¿Cuáles son las áreas de mejora más comunes entre los closers?</button>
+          <button class="chat-ejemplo-btn" onclick="usarEjemplo(this)">Resumen estratégico de las últimas 300 llamadas de setting para marketing</button>
+          <button class="chat-ejemplo-btn" onclick="usarEjemplo(this)">¿Qué tipo de leads convierten mejor según las calificaciones?</button>
+        </div>
+      </div>
+
+      <!-- Panel derecho: chat -->
+      <div class="chat-main">
+        <div class="chat-messages" id="chatMessages">
+          <div class="chat-msg chat-msg-system">
+            <div class="chat-msg-bubble">
+              Soy el <strong>Analista IA</strong> del equipo. Puedo responder preguntas estratégicas sobre las llamadas de ventas: patrones de objeciones, Q&amp;A frecuentes, desempeño de agentes, tendencias de leads, y más.<br><br>
+              Configura el contexto a la izquierda y escribe tu consulta.
+            </div>
+          </div>
+        </div>
+
+        <div class="chat-input-row">
+          <textarea
+            id="chatInput"
+            class="chat-textarea"
+            placeholder="Ej: De las últimas 300 llamadas de setting, ¿cuáles son las principales objeciones y cómo se manejan?"
+            rows="2"
+            onkeydown="chatKeyDown(event)"
+          ></textarea>
+          <button class="chat-send-btn" id="chatSendBtn" onclick="enviarChat()">
+            <span id="chatSendIcon">➤</span>
+          </button>
+        </div>
+        <p class="chat-hint">Enter para enviar · Shift+Enter para nueva línea</p>
+      </div>
+
+    </div>
   </section>
 
 </main>

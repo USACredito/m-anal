@@ -73,24 +73,33 @@ def obtener_access_token():
         print(f"[RC] Error al obtener token: {resp.text}")
         return None
 
-def sync_calls(dias_atras=1):
+def _get_ids_existentes() -> set:
+    """Carga todos los IDs existentes en llamadas_ventas para evitar duplicados."""
+    try:
+        registros = listar_registros("llamadas_ventas")
+        return {str(r.get("ID Fathom", "")) for r in registros if r.get("ID Fathom")}
+    except Exception as e:
+        print(f"[RC] WARN: No se pudo verificar IDs existentes: {e}")
+        return set()
+
+def sync_calls(dias_atras=8):
     token = obtener_access_token()
     if not token: return
-    
-    # Rango de fechas
+
+    # Rango de fechas (últimos N días)
     date_from = (datetime.now() - timedelta(days=dias_atras)).strftime("%Y-%m-%dT%H:%M:%S.000Z")
-    
+
     url = f"{RC_SERVER_URL}/restapi/v1.0/account/~/call-log"
     params = {
         "dateFrom": date_from,
-        "withRecording": "true", # Solo llamadas grabadas
-        "perPage": 100
+        "withRecording": "true",
+        "perPage": 250
     }
     headers = {"Authorization": f"Bearer {token}"}
-    
-    print(f"[RC] Buscando llamadas desde {date_from}...")
+
+    print(f"[RC] Buscando llamadas desde {date_from} (últimos {dias_atras} días)...")
     resp = requests.get(url, headers=headers, params=params)
-    
+
     if resp.status_code != 200:
         print(f"[RC] Error al consultar call-log: {resp.text}")
         return
@@ -98,31 +107,39 @@ def sync_calls(dias_atras=1):
     calls = resp.json().get("records", [])
     print(f"[RC] Se encontraron {len(calls)} llamadas con grabación.")
 
-    # 1. Obtener lista de agentes para clasificar (Setter/Closer)
+    # Cargar IDs ya existentes para evitar duplicados
+    ids_existentes = _get_ids_existentes()
+    print(f"[RC] IDs ya en NocoDB: {len(ids_existentes)}")
+
+    # Obtener lista de agentes para clasificar (Setter/Closer)
     agentes = {a.get("Nombre"): a for a in listar_registros("agentes")}
 
+    nuevas = 0
     for call in calls:
         call_id = str(call.get("id"))
-        
-        # Verificar si ya existe en NocoDB (para evitar duplicados)
-        # Nota: En un sistema real, buscaríamos por id_fathom o similar.
-        # Por ahora usaremos la tabla llamadas_ventas como destino principal
-        
+
+        # Deduplicación: saltar si ya existe
+        if call_id in ids_existentes:
+            continue
+
         from_name = call.get("from", {}).get("name", "Desconocido")
         to_name = call.get("to", {}).get("name", "Desconocido")
-        
-        # Lógica de clasificación simplificada
-        agente = agentes.get(from_name) or agentes.get(to_name)
-        rol = agente.get("Tipo") if agente else "Ventas" # Default si no está en la tabla
-        
-        # Seleccionar tabla según rol
-        # (Aunque el usuario dijo solo setters y closers, usaremos llamadas_ventas por ahora)
-        tabla_destino = "llamadas_ventas"
-        
+
         duracion_min = int(call.get("duration", 0) / 60)
         if duracion_min < 2:
             print(f"  [SKIP] Llamada {call_id} descartada por baja duración ({duracion_min} min).")
             continue
+
+        # Clasificar como setter/closer según tabla agentes
+        agente = agentes.get(from_name) or agentes.get(to_name)
+        rol = agente.get("Tipo", "ventas").lower() if agente else "ventas"
+        # Normalizar: si el tipo contiene setter→setter, closer→closer
+        if "setter" in rol:
+            tipo_llamada = "setter"
+        elif "closer" in rol:
+            tipo_llamada = "closer"
+        else:
+            tipo_llamada = "ventas"
 
         # Extraer URL de grabación
         recording = call.get("recording")
@@ -130,22 +147,24 @@ def sync_calls(dias_atras=1):
         if recording:
             url_audio = f"{RC_SERVER_URL}/restapi/v1.0/account/~/recording/{recording.get('id')}/content"
 
-        # Insertar en NocoDB
         data_noco = {
-            "ID Fathom": call_id, # Usamos el ID de RC como ID único
+            "ID Fathom": call_id,
             "Título": f"Llamada RC: {from_name} -> {to_name}",
             "Fecha": call.get("startTime", "")[:10],
             "Hora": call.get("startTime", "")[11:16],
             "Duración (min)": duracion_min,
             "Participantes": f"{from_name}, {to_name}",
             "URL Grabación": url_audio,
-            "Tipo": rol,
+            "Tipo": tipo_llamada,
             "Estado": "pendiente"
         }
-        
-        # Añadir si no existe (simplificado: el usuario debe manejar la unicidad o yo añadir un check)
-        crear_registro(tabla_destino, data_noco)
-        print(f"  [OK] Registrada llamada {call_id}")
+
+        crear_registro("llamadas_ventas", data_noco)
+        ids_existentes.add(call_id)
+        nuevas += 1
+        print(f"  [OK] Nueva llamada {call_id} ({tipo_llamada})")
+
+    print(f"[RC] Sync completado: {nuevas} nuevas llamadas insertadas.")
 
 if __name__ == "__main__":
-    sync_calls(dias_atras=7) # Por defecto busca la última semana
+    sync_calls(dias_atras=8)

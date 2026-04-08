@@ -59,6 +59,7 @@ function switchTab(tab, el) {
     const titles = {
         metricas: ["Rendimiento del Equipo", "Setters & Closers · Semáforo de calidad"],
         llamadas: ["Llamadas Recientes", "KPIs por llamada · Detalle de desempeño"],
+        analista: ["Analista IA", "Consulta estratégica sobre llamadas de ventas"],
     };
     document.getElementById("pageTitle").textContent = titles[tab][0];
     document.getElementById("pageSub").textContent  = titles[tab][1];
@@ -470,8 +471,38 @@ function verDetalleLlamada(c) {
       </div>`;
     }
 
+    // Resumen bien/mal
+    const puntosFuertes = _parsearLista(c["Puntos Fuertes"]);
+    const areasMejora   = _parsearLista(c["Áreas de Mejora"]);
+    const resumen       = c["Resumen"] || "";
+
+    const htmlPuntosFuertes = puntosFuertes.length
+        ? puntosFuertes.map(p => `<li style="margin-bottom:6px;color:#22c55e">✓ ${p}</li>`).join("")
+        : "<li style='color:var(--text-muted)'>Sin datos</li>";
+    const htmlAreasMejora = areasMejora.length
+        ? areasMejora.map(p => `<li style="margin-bottom:6px;color:#f59e0b">↗ ${p}</li>`).join("")
+        : "<li style='color:var(--text-muted)'>Sin datos</li>";
+
+    const seccionResumen = resumen ? `
+      <div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:16px;border-left:3px solid var(--accent)">
+        <div style="font-size:11px;text-transform:uppercase;color:var(--text-muted);letter-spacing:1px;margin-bottom:8px">Resumen ejecutivo</div>
+        <p style="font-size:13.5px;line-height:1.6;color:var(--text-dim)">${resumen}</p>
+      </div>` : "";
+
+    const seccionBienMal = (puntosFuertes.length || areasMejora.length) ? `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+        <div style="background:rgba(34,197,94,0.06);border-radius:10px;padding:16px">
+          <div style="font-size:11px;text-transform:uppercase;color:#22c55e;letter-spacing:1px;margin-bottom:10px">Lo que hizo bien</div>
+          <ul style="list-style:none;padding:0;margin:0;font-size:13px">${htmlPuntosFuertes}</ul>
+        </div>
+        <div style="background:rgba(245,158,11,0.06);border-radius:10px;padding:16px">
+          <div style="font-size:11px;text-transform:uppercase;color:#f59e0b;letter-spacing:1px;margin-bottom:10px">Áreas de mejora</div>
+          <ul style="list-style:none;padding:0;margin:0;font-size:13px">${htmlAreasMejora}</ul>
+        </div>
+      </div>` : "";
+
     document.getElementById("llamadaContent").innerHTML = `
-    <div style="display:flex; flex-direction:column; gap:24px;">
+    <div style="display:flex; flex-direction:column; gap:20px;">
       <div class="kpi-grid" style="grid-template-columns: repeat(3,1fr)">
         <div class="kpi-card" style="padding:16px">
           <div class="kpi-val" style="font-size:28px">${parseFloat(c["Nota Total"] || 0).toFixed(1)}</div>
@@ -490,6 +521,8 @@ function verDetalleLlamada(c) {
         <h4 style="font-size:12px;text-transform:uppercase;color:var(--text-muted);letter-spacing:1px;margin-bottom:16px">Desglose de Métricas</h4>
         ${camposExtra}
       </div>
+      ${seccionResumen}
+      ${seccionBienMal}
     </div>`;
 
     document.getElementById("llamadaOverlay").classList.add("open");
@@ -507,6 +540,125 @@ function formatFecha(f) {
     try {
         return new Date(f + "T00:00:00").toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
     } catch { return f; }
+}
+
+// ─── MÓDULO: ANALISTA IA (CHAT) ───────────────────────────────
+
+let _chatHistorial = [];
+
+function usarEjemplo(btn) {
+    document.getElementById("chatInput").value = btn.textContent.trim();
+    document.getElementById("chatInput").focus();
+}
+
+function chatKeyDown(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        enviarChat();
+    }
+}
+
+async function enviarChat() {
+    const input = document.getElementById("chatInput");
+    const mensaje = input.value.trim();
+    if (!mensaje) return;
+
+    const contexto = document.getElementById("chatContexto").value;
+    const limite = parseInt(document.getElementById("chatLimite").value);
+    const btn = document.getElementById("chatSendBtn");
+
+    // Agregar mensaje del usuario
+    agregarMensajeChat("user", mensaje);
+    input.value = "";
+    input.style.height = "auto";
+
+    // Estado cargando
+    btn.disabled = true;
+    document.getElementById("chatSendIcon").textContent = "⏳";
+    const loadingId = agregarMensajeChat("loading", "Analizando datos...");
+
+    try {
+        const r = await fetch(`${API}/api/chat`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ mensaje, contexto, limite })
+        });
+        const data = await r.json();
+        eliminarMensaje(loadingId);
+
+        if (data.error) {
+            agregarMensajeChat("error", `Error: ${data.error}`);
+        } else {
+            agregarMensajeChat("assistant", data.respuesta);
+        }
+    } catch (e) {
+        eliminarMensaje(loadingId);
+        agregarMensajeChat("error", `Error de conexión: ${e.message}`);
+    } finally {
+        btn.disabled = false;
+        document.getElementById("chatSendIcon").textContent = "➤";
+    }
+}
+
+function agregarMensajeChat(tipo, texto) {
+    const container = document.getElementById("chatMessages");
+    const id = `msg-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    let claseExtra = "";
+    let contenido = "";
+
+    if (tipo === "user") {
+        claseExtra = "chat-msg-user";
+        contenido = `<div class="chat-msg-bubble chat-bubble-user">${escapeHtml(texto)}</div>`;
+    } else if (tipo === "assistant") {
+        claseExtra = "chat-msg-assistant";
+        contenido = `<div class="chat-msg-bubble chat-bubble-assistant">${formatearRespuestaIA(texto)}</div>`;
+    } else if (tipo === "loading") {
+        claseExtra = "chat-msg-loading";
+        contenido = `<div class="chat-msg-bubble chat-bubble-loading"><span class="chat-dots"><span>.</span><span>.</span><span>.</span></span> ${escapeHtml(texto)}</div>`;
+    } else if (tipo === "error") {
+        claseExtra = "chat-msg-error";
+        contenido = `<div class="chat-msg-bubble chat-bubble-error">⚠️ ${escapeHtml(texto)}</div>`;
+    }
+
+    const div = document.createElement("div");
+    div.className = `chat-msg ${claseExtra}`;
+    div.id = id;
+    div.innerHTML = contenido;
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
+    return id;
+}
+
+function eliminarMensaje(id) {
+    const el = document.getElementById(id);
+    if (el) el.remove();
+}
+
+function formatearRespuestaIA(texto) {
+    // Convertir markdown básico a HTML
+    return texto
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+        .replace(/\*(.+?)\*/g, "<em>$1</em>")
+        .replace(/^#{1,3} (.+)$/gm, "<strong style='font-size:14px;display:block;margin:8px 0 4px'>$1</strong>")
+        .replace(/^[-•] (.+)$/gm, "<span style='display:block;padding-left:12px'>• $1</span>")
+        .replace(/\n\n/g, "<br><br>")
+        .replace(/\n/g, "<br>");
+}
+
+function escapeHtml(str) {
+    return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+// ─── MÓDULO: DETALLE LLAMADA (con resumen bien/mal) ───────────
+
+function _parsearLista(val) {
+    if (!val) return [];
+    try {
+        const arr = JSON.parse(val);
+        return Array.isArray(arr) ? arr : [String(arr)];
+    } catch { return [String(val)]; }
 }
 
 function mostrarToast(msg, tipo = "success") {
