@@ -119,6 +119,11 @@ def sync_calls(dias_atras=1):
         # (Aunque el usuario dijo solo setters y closers, usaremos llamadas_ventas por ahora)
         tabla_destino = "llamadas_ventas"
         
+        duracion_min = int(call.get("duration", 0) / 60)
+        if duracion_min < 2:
+            print(f"  [SKIP] Llamada {call_id} descartada por baja duración ({duracion_min} min).")
+            continue
+
         # Extraer URL de grabación
         recording = call.get("recording")
         url_audio = ""
@@ -131,7 +136,7 @@ def sync_calls(dias_atras=1):
             "Título": f"Llamada RC: {from_name} -> {to_name}",
             "Fecha": call.get("startTime", "")[:10],
             "Hora": call.get("startTime", "")[11:16],
-            "Duración (min)": int(call.get("duration", 0) / 60),
+            "Duración (min)": duracion_min,
             "Participantes": f"{from_name}, {to_name}",
             "URL Grabación": url_audio,
             "Tipo": rol,

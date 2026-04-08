@@ -235,6 +235,7 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
                     "Venta Cita": float(desglose.get("venta_cita", 0)),
                     "Objeciones": float(desglose.get("manejo_objeciones", 0)),
                     "Agendó?": str(resultado_setter.get("agendo_cita", "")),
+                    "Fecha Llamada": fecha,
                     "Mes-Año": mes_anio,
                 }
                 crear_registro("calificaciones_setters", payload)
@@ -264,6 +265,7 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
                     "Objeciones": float(desglose.get("objeciones", 0)),
                     "Cierre": float(desglose.get("cierre", 0)),
                     "Resultado": str(resultado_closer.get("resultado_llamada", "")),
+                    "Fecha Llamada": fecha,
                     "Mes-Año": mes_anio,
                 }
                 crear_registro("calificaciones_closers", payload_closer)
