@@ -48,14 +48,12 @@ def create_table(name, title, columns):
 def main():
     print(f"--- INICIALIZANDO NOCODB (Proyecto: {PROJECT_ID}) ---")
     
-    # 1. Definición de Tablas y Columnas
-    
-    # TABLAS DE LLAMADAS (Estructura idéntica)
+    # 1. TABLA DE LLAMADAS (Solo Ventas)
     col_llamadas = [
         {"column_name": "id_fathom", "title": "ID Fathom", "uidt": "SingleLineText"},
         {"column_name": "titulo", "title": "Título", "uidt": "SingleLineText"},
         {"column_name": "fecha", "title": "Fecha", "uidt": "Date"},
-        {"column_name": "hora", "title": "Hora", "uidt": "SingleLineText"}, # Usamos text para HH:MM simple
+        {"column_name": "hora", "title": "Hora", "uidt": "SingleLineText"},
         {"column_name": "duracion_minutos", "title": "Duración (min)", "uidt": "Number"},
         {"column_name": "participantes", "title": "Participantes", "uidt": "LongText"},
         {"column_name": "url_grabacion", "title": "URL Grabación", "uidt": "SingleLineText"},
@@ -65,12 +63,9 @@ def main():
         {"column_name": "transcripcion_texto", "title": "Transcripción Texto", "uidt": "LongText"},
         {"column_name": "fecha_procesamiento", "title": "Fecha Procesamiento", "uidt": "Date"}
     ]
-    
-    tablas_llamadas = ["llamadas_ventas", "llamadas_soporte", "llamadas_onboarding"]
-    for t in tablas_llamadas:
-        create_table(t, t.replace("_", " ").title(), col_llamadas)
+    create_table("llamadas_ventas", "Llamadas Ventas", col_llamadas)
 
-    # TABLA AGENTES
+    # 2. TABLA AGENTES
     col_agentes = [
         {"column_name": "nombre", "title": "Nombre", "uidt": "SingleLineText"},
         {"column_name": "tipo", "title": "Tipo", "uidt": "SingleLineText"},
@@ -80,7 +75,7 @@ def main():
     ]
     create_table("agentes", "Agentes", col_agentes)
 
-    # TABLAS DE CALIFICACIONES
+    # 3. TABLA DE CALIFICACIONES LEADS (CALIDAD DE CLIENTE)
     col_calif_leads = [
         {"column_name": "id_llamada_fathom", "title": "ID Llamada", "uidt": "SingleLineText"},
         {"column_name": "fecha_llamada", "title": "Fecha Llamada", "uidt": "Date"},
@@ -93,6 +88,7 @@ def main():
     ]
     create_table("calificaciones_leads", "Calificaciones Leads", col_calif_leads)
 
+    # 4. TABLA DE CALIFICACIONES CLOSERS (DESEMPEÑO STAFF)
     col_calif_closers = [
         {"column_name": "nombre_closer", "title": "Closer", "uidt": "SingleLineText"},
         {"column_name": "calificacion_total", "title": "Nota Total", "uidt": "Number"},
@@ -107,29 +103,7 @@ def main():
     ]
     create_table("calificaciones_closers", "Calificaciones Closers", col_calif_closers)
 
-    col_calif_onb = [
-        {"column_name": "nombre_coach", "title": "Coach", "uidt": "SingleLineText"},
-        {"column_name": "calificacion_total", "title": "Nota Total", "uidt": "Number"},
-        {"column_name": "calificacion_claridad", "title": "Claridad", "uidt": "Number"},
-        {"column_name": "calificacion_adaptacion", "title": "Adaptación", "uidt": "Number"},
-        {"column_name": "calificacion_completitud", "title": "Completitud", "uidt": "Number"},
-        {"column_name": "calificacion_tiempo", "title": "Tiempo", "uidt": "Number"},
-        {"column_name": "calificacion_satisfaccion", "title": "Satisfacción", "uidt": "Number"},
-        {"column_name": "cliente_listo", "title": "Listo?", "uidt": "SingleLineText"},
-        {"column_name": "fecha_llamada", "title": "Fecha Llamada", "uidt": "Date"},
-        {"column_name": "mes_año", "title": "Mes-Año", "uidt": "SingleLineText"}
-    ]
-    create_table("calificaciones_onboarding", "Calificaciones Onboarding", col_calif_onb)
-
-    # TABLAS DE SOPORTE E HISTÓRICO
-    create_table("lista_emails", "Lista Emails", [
-        {"column_name": "nombre", "title": "Nombre", "uidt": "SingleLineText"},
-        {"column_name": "email", "title": "Email", "uidt": "SingleLineText"},
-        {"column_name": "recibe_ventas", "title": "Ventas", "uidt": "Checkbox"},
-        {"column_name": "recibe_soporte", "title": "Soporte", "uidt": "Checkbox"},
-        {"column_name": "recibe_onboarding", "title": "Onboarding", "uidt": "Checkbox"}
-    ])
-
+    # 5. TABLA DE CALIFICACIONES SETTERS (DESEMPEÑO STAFF)
     col_calif_setters = [
         {"column_name": "nombre_setter", "title": "Setter", "uidt": "SingleLineText"},
         {"column_name": "calificacion_total", "title": "Nota Total", "uidt": "Number"},
@@ -143,15 +117,13 @@ def main():
     ]
     create_table("calificaciones_setters", "Calificaciones Setters", col_calif_setters)
 
+    # 6. RESUMEN MENSUAL
     create_table("resumen_mensual_calidad", "Resumen Mensual", [
         {"column_name": "mes_año", "title": "Mes-Año", "uidt": "SingleLineText"},
         {"column_name": "promedio_calidad_setters", "title": "Promedio Setters", "uidt": "Number"},
         {"column_name": "promedio_calidad_leads", "title": "Promedio Leads", "uidt": "Number"},
         {"column_name": "promedio_calidad_closers", "title": "Promedio Closers", "uidt": "Number"},
-        {"column_name": "promedio_calidad_onboarding", "title": "Promedio Onboarding", "uidt": "Number"},
-        {"column_name": "total_llamadas_ventas", "title": "Total Ventas", "uidt": "Number"},
-        {"column_name": "total_llamadas_soporte", "title": "Total Soporte", "uidt": "Number"},
-        {"column_name": "total_llamadas_onboarding", "title": "Total Onboarding", "uidt": "Number"}
+        {"column_name": "total_llamadas_ventas", "title": "Total Ventas", "uidt": "Number"}
     ])
 
     print("\n--- PROCESO FINALIZADO ---")

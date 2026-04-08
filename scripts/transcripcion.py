@@ -31,7 +31,7 @@ AIRCALL_TOKEN = os.getenv("AIRCALL_TOKEN")
 TMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".tmp")
 os.makedirs(TMP_DIR, exist_ok=True)
 
-TABLAS = ["llamadas_ventas", "llamadas_soporte", "llamadas_onboarding"]
+TABLAS = ["llamadas_ventas"]
 BATCH_SIZE = 10   # Procesar máx 10 llamadas por ejecución para no sobrecargar APIs
 DELAY_ENTRE_DESCARGAS = 2  # segundos entre descargas
 

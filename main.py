@@ -80,8 +80,7 @@ def main():
 ╚══════════════════════════════════════════════════════════╝
 """)
 
-    # Definir etapas del pipeline
-    # sync_ringcentral y sync_aircall se ejecutan en la etapa 'sync'
+    # Definir etapas del pipeline (Solo Ventas)
     pipeline = []
     
     if args.solo == "sync" or not args.solo:
@@ -90,9 +89,7 @@ def main():
     
     pipeline.extend([
         ("transcripcion", "transcripcion.py"),
-        ("gemini", "analisis_gemini.py"),
-        ("calificaciones", "calificaciones.py"),
-        # ClickUp eliminado — datos van solo a NocoDB y Dashboard
+        ("calificaciones", "calificaciones.py")
     ])
 
     if args.solo and args.solo != "sync":

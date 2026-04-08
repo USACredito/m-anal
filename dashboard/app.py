@@ -128,6 +128,13 @@ def metricas_agente(agente: dict) -> dict:
                 "calificaciones_closers", "Closer", nombre
             )
             campo_total = "Nota Total"
+        elif tipo == "setter":
+            calificaciones = get_calificaciones_por_nombre(
+                "calificaciones_leads", "ID Llamada", "" # Para leads, buscamos todos los registros por ahora o por ID
+            )
+            # Para Setters/Leads, no buscamos por nombre exacto porque el prompt actual no extrae 'nombre_setter'
+            # pero podemos mostrar el promedio global de la tabla.
+            campo_total = "Calificación"
         else:
             calificaciones = get_calificaciones_por_nombre(
                 "calificaciones_onboarding", "Coach", nombre

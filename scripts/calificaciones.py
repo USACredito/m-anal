@@ -242,45 +242,7 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
     return avg_leads, avg_closers
 
 
-def calificar_onboarding(registros: list) -> float:
-    """Califica sesiones de onboarding. Retorna el promedio."""
-    califs = []
-
-    for r in registros:
-        transcripcion = r.get("Transcripción Texto", "")
-        if not transcripcion:
-            continue
-
-        call_id = r.get("ID Fathom", "N/A")
-        fecha = r.get("Fecha", "")
-        mes_anio = datetime.now().strftime("%Y-%m")
-
-        print(f"  → [{call_id}] Calificando onboarding con OpenAI...")
-        resultado = llamar_openai_json(PROMPT_CALIDAD_ONBOARDING, transcripcion)
-        if "error" not in resultado:
-            desglose = resultado.get("desglose", {})
-            try:
-                crear_registro("calificaciones_onboarding", {
-                    "Fecha Llamada": fecha,
-                    "Coach": resultado.get("nombre_coach", "Desconocido"),
-                    "Nota Total": resultado.get("calificacion_total", 0),
-                    "Claridad": desglose.get("claridad", 0),
-                    "Adaptación": desglose.get("adaptacion", 0),
-                    "Completitud": desglose.get("completitud", 0),
-                    "Tiempo": desglose.get("manejo_tiempo", 0),
-                    "Satisfacción": desglose.get("satisfaccion_cliente", 0),
-                    "Listo?": resultado.get("cliente_listo_para_usar", ""),
-                    "Mes-Año": mes_anio,
-                })
-                califs.append(resultado.get("calificacion_total", 0))
-            except Exception as e:
-                print(f"  [ERROR] No se pudo guardar calificacion_onboarding: {e}")
-
-    return round(sum(califs) / len(califs), 2) if califs else 0
-
-
-def guardar_resumen_mensual(avg_leads, avg_closers, avg_onboarding,
-                             n_ventas, n_soporte, n_onboarding):
+def guardar_resumen_mensual(avg_leads, avg_closers, n_ventas):
     """Guarda el resumen mensual de calidad en NocoDB."""
     mes_anio = datetime.now().strftime("%Y-%m")
     try:
@@ -288,10 +250,7 @@ def guardar_resumen_mensual(avg_leads, avg_closers, avg_onboarding,
             "Mes-Año": mes_anio,
             "Promedio Leads": avg_leads,
             "Promedio Closers": avg_closers,
-            "Promedio Onboarding": avg_onboarding,
             "Total Ventas": n_ventas,
-            "Total Soporte": n_soporte,
-            "Total Onboarding": n_onboarding,
         })
         print(f"\n[CALIFICACIONES] Resumen mensual {mes_anio} guardado en NocoDB.")
     except Exception as e:
@@ -326,10 +285,8 @@ def main():
             return []
 
     regs_ventas = get_registros("llamadas_ventas")
-    regs_soporte = get_registros("llamadas_soporte")
-    regs_onboarding = get_registros("llamadas_onboarding")
 
-    print(f"\n[CALIFICACIONES] Ventas: {len(regs_ventas)} | Soporte: {len(regs_soporte)} | Onboarding: {len(regs_onboarding)}")
+    print(f"\n[CALIFICACIONES] Ventas encontradas: {len(regs_ventas)}")
 
     # Calificar ventas
     avg_leads, avg_closers = 0, 0
@@ -337,22 +294,12 @@ def main():
         print("\n[CALIFICACIONES] → Calificando VENTAS...")
         avg_leads, avg_closers = calificar_ventas(regs_ventas)
 
-    # Calificar onboarding
-    avg_onboarding = 0
-    if regs_onboarding:
-        print("\n[CALIFICACIONES] → Calificando ONBOARDING...")
-        avg_onboarding = calificar_onboarding(regs_onboarding)
-
     # Guardar resumen mensual
-    guardar_resumen_mensual(
-        avg_leads, avg_closers, avg_onboarding,
-        len(regs_ventas), len(regs_soporte), len(regs_onboarding)
-    )
+    guardar_resumen_mensual(avg_leads, avg_closers, len(regs_ventas))
 
     print(f"\n[CALIFICACIONES] ✅ Promedios del período:")
-    print(f"  Calidad Leads: {avg_leads}/10")
-    print(f"  Calidad Closers: {avg_closers}/10")
-    print(f"  Calidad Onboarding: {avg_onboarding}/10")
+    print(f"  Calidad Leads (Marketing): {avg_leads}/10")
+    print(f"  Calidad Closers (Staff):   {avg_closers}/10")
 
 
 if __name__ == "__main__":
