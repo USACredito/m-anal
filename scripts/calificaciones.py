@@ -169,9 +169,14 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
 
     for r in registros:
         # --- FILTRO DE DURACIÓN (Mínimo 2 min) ---
-        duracion = r.get("Duración", 0)
-        if duracion and int(duracion) <= 120:
-            print(f"  [SKIP] Llamada {r.get('ID Fathom')} demasiado corta ({duracion}s). Omitiendo.")
+        # El sync guarda la duración en MINUTOS en el campo "Duración (min)"
+        duracion_min = r.get("Duración (min)") or r.get("Duración", 0)
+        try:
+            duracion_min = float(duracion_min or 0)
+        except (ValueError, TypeError):
+            duracion_min = 0
+        if duracion_min < 2:
+            print(f"  [SKIP] Llamada {r.get('ID Fathom')} demasiado corta ({duracion_min} min). Omitiendo.")
             continue
 
         transcripcion = r.get("Transcripción Texto", "")
