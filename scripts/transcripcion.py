@@ -125,37 +125,51 @@ def descargar_audio(url: str, call_id: str, titulo: str = ""):
         return None
 
 
-def transcribir_con_gemini(ruta_audio: str, call_id: str) -> str | None:
+def transcribir_con_deepgram(ruta_audio: str, call_id: str) -> str | None:
     """
-    Sube el audio a Gemini y obtiene la transcripción.
+    Sube el audio a Deepgram API usando requests.
+    Retorna la transcripción con los hablantes identificados.
     """
-    print(f"  → [{call_id}] Transcribiendo con Gemini {MODEL_NAME}...")
+    DEEPGRAM_API_KEY = os.getenv("DEEPGRAM_API_KEY")
+    if not DEEPGRAM_API_KEY:
+        print("    [ERROR] DEEPGRAM_API_KEY no encontrada en .env")
+        return None
+
+    print(f"  → [{call_id}] Transcribiendo con Deepgram (nova-2)...")
+    
+    # Parámetros: modelo nova-2, auto-puntuación, separación de hablantes
+    url = "https://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&diarize=true&utterances=true&language=es"
+    headers = {
+        "Authorization": f"Token {DEEPGRAM_API_KEY}",
+        "Content-Type": "audio/mpeg"
+    }
+
     try:
-        audio_file = genai.upload_file(path=ruta_audio)
-
-        # Esperar procesamiento
-        max_wait = 60
-        waited = 0
-        while audio_file.state.name == "PROCESSING" and waited < max_wait:
-            time.sleep(3)
-            waited += 3
-            audio_file = genai.get_file(audio_file.name)
-
-        if audio_file.state.name != "ACTIVE":
-            print(f"    [WARN] Archivo Gemini en estado: {audio_file.state.name}")
-            return None
-
-        model = genai.GenerativeModel(MODEL_NAME)
-        prompt = (
-            "Eres un transcriptor experto. Transcribe este audio de llamada de ventas. "
-            "Identifica a los hablantes (Speaker A / Speaker B) y mantén el idioma original (Español). "
-            "Formato: 'Speaker A: [texto]\\nSpeaker B: [texto]'"
-        )
-        response = model.generate_content([prompt, audio_file])
-        return response.text
+        with open(ruta_audio, "rb") as f:
+            resp = requests.post(url, headers=headers, data=f, timeout=300)
+        
+        resp.raise_for_status()
+        data = resp.json()
+        
+        utterances = data.get("results", {}).get("utterances", [])
+        if not utterances:
+            print("    [WARN] No se detectó conversación.")
+            return "(Sin audio detectable)"
+            
+        transcripcion_final = ""
+        for u in utterances:
+            speaker = u.get("speaker", 0)
+            text = u.get("transcript", "").strip()
+            # Mapeo simple: Speaker 0 -> Speaker A, Speaker 1 -> Speaker B
+            speaker_label = f"Speaker {chr(65 + int(speaker))}" 
+            transcripcion_final += f"{speaker_label}: {text}\n"
+            
+        return transcripcion_final.strip()
 
     except Exception as e:
-        print(f"  [ERROR] Error en Gemini: {e}")
+        print(f"  [ERROR] Error en Deepgram: {e}")
+        if hasattr(e, "response") and getattr(e, "response") is not None:
+            print(f"  [DETALLE] {e.response.text}")
         return None
 
 def procesar_llamadas():
@@ -217,7 +231,7 @@ def procesar_llamadas():
                 continue
 
             # Transcribir
-            texto = transcribir_con_gemini(ruta_local, call_id)
+            texto = transcribir_con_deepgram(ruta_local, call_id)
 
             if texto:
                 texto_final = texto[:30000]
