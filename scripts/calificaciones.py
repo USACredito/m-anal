@@ -11,7 +11,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import google.generativeai as genai
 from dotenv import load_dotenv
@@ -253,9 +253,19 @@ def guardar_resumen_mensual(avg_leads, avg_closers, avg_onboarding,
 
 def main():
     parser = argparse.ArgumentParser(description="Calificar llamadas con Gemini.")
-    parser.add_argument("--inicio", required=True, help="Fecha inicio (YYYY-MM-DD)")
-    parser.add_argument("--fin", required=True, help="Fecha fin (YYYY-MM-DD)")
+    parser.add_argument("--inicio", help="Fecha inicio (YYYY-MM-DD)")
+    parser.add_argument("--fin", help="Fecha fin (YYYY-MM-DD)")
+    parser.add_argument("--semana", action="store_true", help="Calificar desde el lunes de esta semana")
     args = parser.parse_args()
+
+    hoy = datetime.now()
+    if args.semana:
+        # Lunes de esta semana
+        lunes = hoy - timedelta(days=hoy.weekday())
+        args.inicio = lunes.strftime("%Y-%m-%d")
+        args.fin = hoy.strftime("%Y-%m-%d")
+    elif not args.inicio or not args.fin:
+        parser.error("Debes especificar --inicio y --fin, o usar --semana")
 
     print(f"[CALIFICACIONES] Procesando: {args.inicio} → {args.fin}")
 
