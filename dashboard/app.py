@@ -116,8 +116,9 @@ def get_calificaciones_demo(tipo: str, nombre: str) -> list:
 
 def metricas_agente(agente: dict) -> dict:
     """Calcula las métricas completas de un agente."""
-    nombre = agente["nombre"]
-    tipo = agente["tipo"]
+    # NocoDB v3 devuelve los campos con el Título (mayúsculas)
+    nombre = agente.get("Nombre") or agente.get("nombre", "")
+    tipo   = (agente.get("Tipo")   or agente.get("tipo",   "")).lower()
 
     if NOCODB_CONFIGURED:
         if tipo == "closer":
@@ -158,19 +159,19 @@ def metricas_agente(agente: dict) -> dict:
             "historial": [],
         }
 
-    valores = [c.get(campo_total, 0) for c in calificaciones]
+    valores = [float(c.get(campo_total, 0) or 0) for c in calificaciones]
     promedio = round(sum(valores) / len(valores), 1)
 
     # Desglose promedio por dimensión
     desglose = {}
     for dim in dims:
-        vals = [c.get(dim, 0) for c in calificaciones if c.get(dim) is not None]
+        vals = [float(c.get(dim, 0) or 0) for c in calificaciones if c.get(dim) is not None]
         label = dim.replace("calificacion_", "").replace("_", " ").title()
         desglose[label] = round(sum(vals) / len(vals), 1) if vals else 0
 
     # Historial para gráfica
     historial = [
-        {"fecha": c.get("Fecha Llamada", ""), "calificacion": c.get(campo_total, 0)}
+        {"fecha": c.get("Fecha Llamada", ""), "calificacion": float(c.get(campo_total, 0) or 0)}
         for c in calificaciones[-10:]
     ]
 
@@ -273,7 +274,9 @@ def api_metricas():
     """Retorna métricas consolidadas con semáforo para todos los agentes activos."""
     if NOCODB_CONFIGURED:
         try:
-            agentes = listar_registros("agentes", where="(activo,eq,true)")
+            # NocoDB v3 no acepta filtro booleano directo — traemos todos y filtramos
+            agentes = listar_registros("agentes")
+            agentes = [a for a in agentes if a.get("Activo") or a.get("activo")]
         except Exception:
             agentes = [a for a in _demo_agentes_store if a["activo"]]
     else:
@@ -282,11 +285,14 @@ def api_metricas():
     resultado = []
     for agente in agentes:
         m = metricas_agente(agente)
+        # NocoDB v3 retorna campos con Título ("Nombre", "Tipo") — normalizamos ambos
+        nombre = agente.get("Nombre") or agente.get("nombre", "")
+        tipo   = (agente.get("Tipo")   or agente.get("tipo",   "")).lower()
         resultado.append({
-            "id": agente.get("Id"),
-            "nombre": agente.get("nombre"),
-            "tipo": agente.get("tipo"),
-            "activo": agente.get("activo"),
+            "id":     agente.get("Id"),
+            "nombre": nombre,
+            "tipo":   tipo,
+            "activo": agente.get("Activo") or agente.get("activo"),
             **m,
         })
 
