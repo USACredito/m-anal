@@ -206,20 +206,24 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
         resultado_setter = llamar_openai_json(PROMPT_CALIDAD_SETTER, transcripcion)
         if "error" not in resultado_setter:
             desglose = resultado_setter.get("desglose", {})
+            payload = {}
             try:
-                crear_registro("calificaciones_setters", {
-                    "Setter": resultado_setter.get("nombre_setter", "Desconocido"),
+                payload = {
                     "ID Llamada": call_id,
-                    "Nota Total": resultado_setter.get("calificacion_total", 0),
-                    "Rapport": desglose.get("rapport", 0),
-                    "Identificación Dolor": desglose.get("identificacion_dolor", 0),
-                    "Venta Cita": desglose.get("venta_cita", 0),
-                    "Manejo Objeciones": desglose.get("manejo_objeciones", 0),
-                    "Resultado": resultado_setter.get("agendo_cita", ""),
+                    "Setter": resultado_setter.get("nombre_setter", "Desconocido"),
+                    "Nota Total": float(resultado_setter.get("calificacion_total", 0)),
+                    "Rapport": float(desglose.get("rapport", 0)),
+                    "Identificación Dolor": float(desglose.get("identificacion_dolor", 0)),
+                    "Venta Cita": float(desglose.get("venta_cita", 0)),
+                    "Manejo Objeciones": float(desglose.get("manejo_objeciones", 0)),
+                    "Resultado": str(resultado_setter.get("agendo_cita", "")),
                     "Mes Año": mes_anio,
-                })
+                }
+                crear_registro("calificaciones_setters", payload)
             except Exception as e:
                 print(f"  [ERROR] No se pudo guardar calificacion_setter: {e}")
+                if payload:
+                    print(f"  [DEBUG] Payload que falló: {json.dumps(payload, indent=2, ensure_ascii=False)}")
 
         # ── Calificar Closer ──
         print(f"  → [{call_id}] Calificando closer con OpenAI...")
