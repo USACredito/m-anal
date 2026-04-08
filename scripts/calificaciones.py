@@ -168,6 +168,12 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
     califs_closers = []
 
     for r in registros:
+        # --- FILTRO DE DURACIÓN (Mínimo 2 min) ---
+        duracion = r.get("Duración", 0)
+        if duracion and int(duracion) <= 120:
+            print(f"  [SKIP] Llamada {r.get('ID Fathom')} demasiado corta ({duracion}s). Omitiendo.")
+            continue
+
         transcripcion = r.get("Transcripción Texto", "")
         if not transcripcion:
             continue
