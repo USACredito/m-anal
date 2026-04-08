@@ -12,6 +12,7 @@ import json
 import os
 import sys
 from datetime import datetime, timedelta
+import requests
 
 import google.generativeai as genai
 from dotenv import load_dotenv
