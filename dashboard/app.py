@@ -271,36 +271,118 @@ def api_eliminar_agente(agente_id):
 
 @app.route("/api/metricas", methods=["GET"])
 def api_metricas():
-    """Retorna métricas consolidadas con semáforo para todos los agentes activos."""
+    """Retorna métricas consolidadas con semáforo para todos los agentes activos.
+    Lee directamente de las tablas de calificaciones v3 (no depende de tabla agentes vacía).
+    """
+    resultado = []
+
     if NOCODB_CONFIGURED:
         try:
-            # NocoDB v3 no acepta filtro booleano directo — traemos todos y filtramos
-            agentes = listar_registros("agentes")
-            agentes = [a for a in agentes if a.get("Activo") or a.get("activo")]
-        except Exception:
-            agentes = [a for a in _demo_agentes_store if a["activo"]]
+            # ── Closers ──────────────────────────────────────────────────────
+            todas_closers = listar_registros("calificaciones_closers")
+            # Agrupar por nombre del Closer
+            closers_map = {}
+            for r in todas_closers:
+                nombre = r.get("Closer") or r.get("nombre_closer", "Desconocido")
+                if nombre not in closers_map:
+                    closers_map[nombre] = []
+                closers_map[nombre].append(r)
+
+            for nombre, calificaciones in closers_map.items():
+                campo_total = "Nota Total"
+                dims = ["Rapport", "Descubrimiento", "Presentación", "Objeciones", "Cierre"]
+                valores = [float(c.get(campo_total) or 0) for c in calificaciones]
+                promedio = round(sum(valores) / len(valores), 1) if valores else None
+                desglose = {}
+                for dim in dims:
+                    vals = [float(c.get(dim) or 0) for c in calificaciones if c.get(dim) is not None]
+                    desglose[dim] = round(sum(vals)/len(vals), 1) if vals else 0
+                historial = [
+                    {"fecha": c.get("Fecha Llamada", ""), "calificacion": float(c.get(campo_total) or 0)}
+                    for c in calificaciones[-10:]
+                ]
+                resultado.append({
+                    "id": nombre,
+                    "nombre": nombre,
+                    "tipo": "closer",
+                    "activo": True,
+                    "total_llamadas": len(calificaciones),
+                    "promedio": promedio,
+                    "semaforo": semaforo(promedio),
+                    "tendencia": calcular_tendencia(calificaciones, campo_total),
+                    "mejor": max(valores) if valores else None,
+                    "peor": min(valores) if valores else None,
+                    "desglose": desglose,
+                    "historial": historial,
+                })
+
+            # ── Setters ──────────────────────────────────────────────────────
+            todas_setters = listar_registros("calificaciones_setters")
+            setters_map = {}
+            for r in todas_setters:
+                nombre = r.get("Setter") or r.get("nombre_setter", "Desconocido")
+                if nombre not in setters_map:
+                    setters_map[nombre] = []
+                setters_map[nombre].append(r)
+
+            for nombre, calificaciones in setters_map.items():
+                campo_total = "Nota Total"
+                dims = ["Rapport", "Identificación Dolor", "Venta Cita", "Objeciones"]
+                valores = [float(c.get(campo_total) or 0) for c in calificaciones]
+                promedio = round(sum(valores) / len(valores), 1) if valores else None
+                desglose = {}
+                for dim in dims:
+                    vals = [float(c.get(dim) or 0) for c in calificaciones if c.get(dim) is not None]
+                    desglose[dim] = round(sum(vals)/len(vals), 1) if vals else 0
+                historial = [
+                    {"fecha": c.get("Fecha Llamada", ""), "calificacion": float(c.get(campo_total) or 0)}
+                    for c in calificaciones[-10:]
+                ]
+                resultado.append({
+                    "id": nombre,
+                    "nombre": nombre,
+                    "tipo": "setter",
+                    "activo": True,
+                    "total_llamadas": len(calificaciones),
+                    "promedio": promedio,
+                    "semaforo": semaforo(promedio),
+                    "tendencia": calcular_tendencia(calificaciones, campo_total),
+                    "mejor": max(valores) if valores else None,
+                    "peor": min(valores) if valores else None,
+                    "desglose": desglose,
+                    "historial": historial,
+                })
+
+        except Exception as e:
+            print(f"[DASHBOARD] Error leyendo calificaciones: {e}")
+            # Fallback a demo
+            resultado = _build_demo_metricas()
     else:
-        agentes = [a for a in _demo_agentes_store if a["activo"]]
+        resultado = _build_demo_metricas()
 
-    resultado = []
-    for agente in agentes:
-        m = metricas_agente(agente)
-        # NocoDB v3 retorna campos con Título ("Nombre", "Tipo") — normalizamos ambos
-        nombre = agente.get("Nombre") or agente.get("nombre", "")
-        tipo   = (agente.get("Tipo")   or agente.get("tipo",   "")).lower()
-        resultado.append({
-            "id":     agente.get("Id"),
-            "nombre": nombre,
-            "tipo":   tipo,
-            "activo": agente.get("Activo") or agente.get("activo"),
-            **m,
-        })
-
-    # Ordenar: críticos primero, luego regular, luego excelente
+    # Ordenar: críticos primero
     orden = {"critico": 0, "regular": 1, "excelente": 2, "sin_datos": 3}
     resultado.sort(key=lambda x: orden.get(x["semaforo"]["nivel"], 99))
 
     return jsonify({"demo": not NOCODB_CONFIGURED, "datos": resultado})
+
+
+def _build_demo_metricas():
+    """Genera métricas de demo cuando NocoDB no está disponible."""
+    out = []
+    for agente in _demo_agentes_store:
+        if not agente["activo"]:
+            continue
+        m = metricas_agente(agente)
+        out.append({
+            "id": agente["Id"],
+            "nombre": agente["nombre"],
+            "tipo": agente["tipo"],
+            "activo": True,
+            **m,
+        })
+    return out
+
 
 
 @app.route("/api/resumen_mensual", methods=["GET"])
