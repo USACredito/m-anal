@@ -195,7 +195,7 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
                     "Justificación": resultado_lead.get("justificacion", ""),
                     "Positivos": json.dumps(resultado_lead.get("factores_positivos", []), ensure_ascii=False),
                     "Negativos": json.dumps(resultado_lead.get("factores_negativos", []), ensure_ascii=False),
-                    "Mes-Año": mes_anio,
+                    "Mes Año": mes_anio,
                 })
                 califs_leads.append(resultado_lead.get("calificacion", 0))
             except Exception as e:
@@ -209,14 +209,14 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
             try:
                 crear_registro("calificaciones_setters", {
                     "Setter": resultado_setter.get("nombre_setter", "Desconocido"),
+                    "ID Llamada": call_id,
                     "Nota Total": resultado_setter.get("calificacion_total", 0),
                     "Rapport": desglose.get("rapport", 0),
                     "Identificación Dolor": desglose.get("identificacion_dolor", 0),
                     "Venta Cita": desglose.get("venta_cita", 0),
-                    "Objeciones": desglose.get("manejo_objeciones", 0),
-                    "Agendó?": resultado_setter.get("agendo_cita", ""),
-                    "Fecha Llamada": fecha,
-                    "Mes-Año": mes_anio,
+                    "Manejo Objeciones": desglose.get("manejo_objeciones", 0),
+                    "Resultado": resultado_setter.get("agendo_cita", ""),
+                    "Mes Año": mes_anio,
                 })
             except Exception as e:
                 print(f"  [ERROR] No se pudo guardar calificacion_setter: {e}")
@@ -228,7 +228,7 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
             desglose = resultado_closer.get("desglose", {})
             try:
                 crear_registro("calificaciones_closers", {
-                    "Fecha Llamada": fecha,
+                    "ID Llamada": call_id,
                     "Closer": resultado_closer.get("nombre_closer", "Desconocido"),
                     "Nota Total": resultado_closer.get("calificacion_total", 0),
                     "Rapport": desglose.get("rapport", 0),
@@ -237,7 +237,7 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
                     "Objeciones": desglose.get("objeciones", 0),
                     "Cierre": desglose.get("cierre", 0),
                     "Resultado": resultado_closer.get("resultado_llamada", ""),
-                    "Mes-Año": mes_anio,
+                    "Mes Año": mes_anio,
                 })
                 califs_closers.append(resultado_closer.get("calificacion_total", 0))
             except Exception as e:
