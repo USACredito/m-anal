@@ -230,22 +230,26 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
         resultado_closer = llamar_openai_json(PROMPT_CALIDAD_CLOSER, transcripcion)
         if "error" not in resultado_closer:
             desglose = resultado_closer.get("desglose", {})
+            payload_closer = {}
             try:
-                crear_registro("calificaciones_closers", {
+                payload_closer = {
                     "ID Llamada": call_id,
                     "Closer": resultado_closer.get("nombre_closer", "Desconocido"),
-                    "Nota Total": resultado_closer.get("calificacion_total", 0),
-                    "Rapport": desglose.get("rapport", 0),
-                    "Descubrimiento": desglose.get("descubrimiento", 0),
-                    "Presentación": desglose.get("presentacion", 0),
-                    "Objeciones": desglose.get("objeciones", 0),
-                    "Cierre": desglose.get("cierre", 0),
-                    "Resultado": resultado_closer.get("resultado_llamada", ""),
+                    "Nota Total": float(resultado_closer.get("calificacion_total", 0)),
+                    "Rapport": float(desglose.get("rapport", 0)),
+                    "Descubrimiento": float(desglose.get("descubrimiento", 0)),
+                    "Presentación": float(desglose.get("presentacion", 0)),
+                    "Objeciones": float(desglose.get("objeciones", 0)),
+                    "Cierre": float(desglose.get("cierre", 0)),
+                    "Resultado": str(resultado_closer.get("resultado_llamada", "")),
                     "Mes-Año": mes_anio,
-                })
-                califs_closers.append(resultado_closer.get("calificacion_total", 0))
+                }
+                crear_registro("calificaciones_closers", payload_closer)
+                califs_closers.append(float(resultado_closer.get("calificacion_total", 0)))
             except Exception as e:
                 print(f"  [ERROR] No se pudo guardar calificacion_closer: {e}")
+                if payload_closer:
+                    print(f"  [DEBUG] Payload Closer fallido: {json.dumps(payload_closer, indent=2, ensure_ascii=False)}")
 
     avg_leads = round(sum(califs_leads) / len(califs_leads), 2) if califs_leads else 0
     avg_closers = round(sum(califs_closers) / len(califs_closers), 2) if califs_closers else 0
