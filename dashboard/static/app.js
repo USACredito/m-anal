@@ -417,6 +417,20 @@ function tarjetaLlamada(c) {
     const tipoLabel = tipo === "closer" ? "Closer" : "Setter";
     const tipoColor = tipo === "closer" ? "#8b5cf6" : "#10b981";
 
+    // Resumen + puntos fuertes/áreas de mejora inline
+    const resumen = c["Resumen"] || "";
+    const puntosFuertes = _parsearLista(c["Puntos Fuertes"]);
+    const areasMejora   = _parsearLista(c["Áreas de Mejora"]);
+
+    const resumenHtml = resumen ? `
+      <div class="call-resumen">${resumen}</div>` : "";
+
+    const bienMalHtml = (puntosFuertes.length || areasMejora.length) ? `
+      <div class="call-bienmal">
+        ${puntosFuertes.slice(0,2).map(p => `<span class="tag-bien">✓ ${p}</span>`).join("")}
+        ${areasMejora.slice(0,2).map(p => `<span class="tag-mal">↗ ${p}</span>`).join("")}
+      </div>` : "";
+
     return `
   <div class="call-card" onclick="verDetalleLlamada(${JSON.stringify(c).replace(/"/g, '&quot;')})">
     <div class="call-card-left">
@@ -432,6 +446,8 @@ function tarjetaLlamada(c) {
         <div class="call-nota" style="color:${notaColor}">${nota}<span style="font-size:12px;opacity:.6">/10</span></div>
       </div>
       <div class="call-dims">${dimsHtml}</div>
+      ${resumenHtml}
+      ${bienMalHtml}
       <div class="call-meta">
         <span>📅 ${fecha}</span>
         <span>📆 ${mesAnio}</span>
