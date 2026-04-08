@@ -11,6 +11,7 @@ let _filtroActual = "todos";
 let _filtroLlamadas = "todos";
 let _filtroFechaLlamadas = null;
 let _detalleChart = null;
+let _llamadasIndexadas = [];  // store para acceso por índice desde botones
 
 // ─── INICIALIZACIÓN ──────────────────────────────────────────
 
@@ -357,10 +358,11 @@ function renderizarLlamadas(filtro) {
         return;
     }
 
-    container.innerHTML = `<div class="calls-list">${lista.map(c => tarjetaLlamada(c)).join("")}</div>`;
+    _llamadasIndexadas = lista;
+    container.innerHTML = `<div class="calls-list">${lista.map((c, i) => tarjetaLlamada(c, i)).join("")}</div>`;
 }
 
-function tarjetaLlamada(c) {
+function tarjetaLlamada(c, idx) {
     const tipo = c._tipo;
     const nombre = tipo === "closer"
         ? (c["Closer"] || c.nombre_closer || "—")
@@ -417,22 +419,14 @@ function tarjetaLlamada(c) {
     const tipoLabel = tipo === "closer" ? "Closer" : "Setter";
     const tipoColor = tipo === "closer" ? "#8b5cf6" : "#10b981";
 
-    // Resumen + puntos fuertes/áreas de mejora inline
-    const resumen = c["Resumen"] || "";
-    const puntosFuertes = _parsearLista(c["Puntos Fuertes"]);
-    const areasMejora   = _parsearLista(c["Áreas de Mejora"]);
-
-    const resumenHtml = resumen ? `
-      <div class="call-resumen">${resumen}</div>` : "";
-
-    const bienMalHtml = (puntosFuertes.length || areasMejora.length) ? `
-      <div class="call-bienmal">
-        ${puntosFuertes.slice(0,2).map(p => `<span class="tag-bien">✓ ${p}</span>`).join("")}
-        ${areasMejora.slice(0,2).map(p => `<span class="tag-mal">↗ ${p}</span>`).join("")}
-      </div>` : "";
+    // Botón "Ver Análisis" solo si hay resumen o puntos
+    const tieneAnalisis = !!(c["Resumen"] || c["Puntos Fuertes"] || c["Áreas de Mejora"]);
+    const btnAnalisis = tieneAnalisis
+        ? `<button class="btn-ver-analisis" onclick="event.stopPropagation();verDetalleLlamada(_llamadasIndexadas[${idx}])">Ver Análisis ›</button>`
+        : "";
 
     return `
-  <div class="call-card" onclick="verDetalleLlamada(${JSON.stringify(c).replace(/"/g, '&quot;')})">
+  <div class="call-card">
     <div class="call-card-left">
       <div class="agent-avatar ${avatarClass}" style="width:42px;height:42px;font-size:14px">${iniciales}</div>
     </div>
@@ -446,12 +440,13 @@ function tarjetaLlamada(c) {
         <div class="call-nota" style="color:${notaColor}">${nota}<span style="font-size:12px;opacity:.6">/10</span></div>
       </div>
       <div class="call-dims">${dimsHtml}</div>
-      ${resumenHtml}
-      ${bienMalHtml}
-      <div class="call-meta">
-        <span>📅 ${fecha}</span>
-        <span>📆 ${mesAnio}</span>
-        <span>🆔 ${c["ID Llamada"] || "—"}</span>
+      <div class="call-footer">
+        <div class="call-meta">
+          <span>📅 ${fecha}</span>
+          <span>📆 ${mesAnio}</span>
+          <span>🆔 ${c["ID Llamada"] || "—"}</span>
+        </div>
+        ${btnAnalisis}
       </div>
     </div>
   </div>`;
