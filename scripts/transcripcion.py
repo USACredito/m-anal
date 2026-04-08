@@ -91,21 +91,38 @@ def transcribir_con_gemini(ruta_audio, call_id):
 
 def procesar_llamadas():
     """
-    Recorre las tablas de NocoDB buscando llamadas 'pendientes'.
+    Recorre las tablas de NocoDB buscando llamadas 'pendientes' o sin estado.
     """
     total_procesadas = 0
     
     for tabla in TABLAS:
         print(f"\n--- Revisando tabla: {tabla} ---")
-        registros = listar_registros(tabla, where="(Estado,eq,pendiente)")
+        # Procesar tanto 'pendiente' como vacíos
+        try:
+            registros_pendientes = listar_registros(tabla, where="(Estado,eq,pendiente)")
+            registros_vacios = listar_registros(tabla, where="(Estado,is,null)")
+            registros_vacios_str = listar_registros(tabla, where="(Estado,eq,)")
+            registros = registros_pendientes + registros_vacios + registros_vacios_str
+        except Exception as e:
+            print(f"  [WARN] Error listando registros: {e}")
+            continue
         
+        # Eliminar duplicados por ID
+        vistos = set()
+        registros_unicos = []
         for r in registros:
+            if r.get("Id") not in vistos:
+                registros_unicos.append(r)
+                vistos.add(r.get("Id"))
+
+        print(f"  Encontradas {len(registros_unicos)} llamadas para procesar.")
+
+        for r in registros_unicos:
             nocodb_id = r.get("Id")
             call_id = r.get("ID Fathom") or str(nocodb_id)
             url_audio = r.get("URL Grabación")
             
             if not url_audio:
-                print(f"  → [{call_id}] Sin URL de grabación. Saltando.")
                 continue
 
             # 1. Descargar
@@ -116,9 +133,12 @@ def procesar_llamadas():
             texto = transcribir_con_gemini(ruta_local, call_id)
             
             if texto:
+                # Limitar texto para NocoDB (evitar errores de tamaño)
+                texto_final = texto[:30000] 
+                
                 # 3. Actualizar NocoDB
                 actualizar_registro(tabla, nocodb_id, {
-                    "Transcripción Texto": texto,
+                    "Transcripción Texto": texto_final,
                     "Estado": "transcrito",
                     "Fecha Procesamiento": datetime.now().strftime("%Y-%m-%d")
                 })
