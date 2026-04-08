@@ -328,10 +328,16 @@ function renderizarLlamadas(filtro) {
     let lista = [];
 
     if (filtro === "todos" || filtro === "closer") {
-        (_todasLlamadas.closers || []).forEach(c => lista.push({ ...c, _tipo: "closer" }));
+        (_todasLlamadas.closers || []).forEach(c => {
+             const f = c["Fecha Llamada"] || (c["CreatedAt"] ? c["CreatedAt"].split(" ")[0] : "");
+             lista.push({ ...c, _tipo: "closer", "Fecha Llamada": f });
+        });
     }
     if (filtro === "todos" || filtro === "setter") {
-        (_todasLlamadas.setters || []).forEach(s => lista.push({ ...s, _tipo: "setter" }));
+        (_todasLlamadas.setters || []).forEach(s => {
+             const f = s["Fecha Llamada"] || (s["CreatedAt"] ? s["CreatedAt"].split(" ")[0] : "");
+             lista.push({ ...s, _tipo: "setter", "Fecha Llamada": f });
+        });
     }
 
     // Filtrar por fecha exacta si hay una seleccionada
