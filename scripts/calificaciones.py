@@ -195,7 +195,7 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
                     "Justificación": resultado_lead.get("justificacion", ""),
                     "Positivos": json.dumps(resultado_lead.get("factores_positivos", []), ensure_ascii=False),
                     "Negativos": json.dumps(resultado_lead.get("factores_negativos", []), ensure_ascii=False),
-                    "Mes Año": mes_anio,
+                    "Mes-Año": mes_anio,
                 })
                 califs_leads.append(resultado_lead.get("calificacion", 0))
             except Exception as e:
@@ -215,9 +215,9 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
                     "Rapport": float(desglose.get("rapport", 0)),
                     "Identificación Dolor": float(desglose.get("identificacion_dolor", 0)),
                     "Venta Cita": float(desglose.get("venta_cita", 0)),
-                    "Manejo Objeciones": float(desglose.get("manejo_objeciones", 0)),
-                    "Resultado": str(resultado_setter.get("agendo_cita", "")),
-                    "Mes Año": mes_anio,
+                    "Objeciones": float(desglose.get("manejo_objeciones", 0)),
+                    "Agendó?": str(resultado_setter.get("agendo_cita", "")),
+                    "Mes-Año": mes_anio,
                 }
                 crear_registro("calificaciones_setters", payload)
             except Exception as e:
@@ -241,7 +241,7 @@ def calificar_ventas(registros: list) -> tuple[float, float]:
                     "Objeciones": desglose.get("objeciones", 0),
                     "Cierre": desglose.get("cierre", 0),
                     "Resultado": resultado_closer.get("resultado_llamada", ""),
-                    "Mes Año": mes_anio,
+                    "Mes-Año": mes_anio,
                 })
                 califs_closers.append(resultado_closer.get("calificacion_total", 0))
             except Exception as e:

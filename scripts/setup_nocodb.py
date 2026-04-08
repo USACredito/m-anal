@@ -91,6 +91,7 @@ def main():
     # 4. TABLA DE CALIFICACIONES CLOSERS (DESEMPEÑO STAFF)
     col_calif_closers = [
         {"column_name": "nombre_closer", "title": "Closer", "uidt": "SingleLineText"},
+        {"column_name": "id_fathom", "title": "ID Llamada", "uidt": "SingleLineText"},
         {"column_name": "calificacion_total", "title": "Nota Total", "uidt": "Number"},
         {"column_name": "calificacion_rapport", "title": "Rapport", "uidt": "Number"},
         {"column_name": "calificacion_descubrimiento", "title": "Descubrimiento", "uidt": "Number"},
@@ -106,6 +107,7 @@ def main():
     # 5. TABLA DE CALIFICACIONES SETTERS (DESEMPEÑO STAFF)
     col_calif_setters = [
         {"column_name": "nombre_setter", "title": "Setter", "uidt": "SingleLineText"},
+        {"column_name": "id_fathom", "title": "ID Llamada", "uidt": "SingleLineText"},
         {"column_name": "calificacion_total", "title": "Nota Total", "uidt": "Number"},
         {"column_name": "rapport", "title": "Rapport", "uidt": "Number"},
         {"column_name": "identificacion_dolor", "title": "Identificación Dolor", "uidt": "Number"},
