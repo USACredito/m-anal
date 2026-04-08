@@ -23,7 +23,7 @@ load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 genai.configure(api_key=GEMINI_API_KEY)
-MODEL_NAME = "gemini-2.0-flash-exp"  # Disponible en v1beta
+MODEL_NAME = "gemini-1.5-flash"
 
 # ─── PROMPTS DE CALIFICACIÓN ──────────────────────────────────────────────────
 
