@@ -21,7 +21,31 @@ RC_CLIENT_SECRET = os.getenv("RC_CLIENT_SECRET")
 RC_JWT = os.getenv("RC_JWT")
 RC_SERVER_URL = os.getenv("RC_SERVER_URL", "https://platform.ringcentral.com")
 
+import json
+import time as _time
+
+# Ruta del token persistido en disco
+_TOKEN_FILE = "/app/.tmp/rc_token.json"
+
 def obtener_access_token():
+    """
+    Obtiene un token de RingCentral y lo persiste en disco.
+    Si el token guardado sigue vigente (< 55 min), lo reutiliza
+    sin llamar a la API (evita CMN-301).
+    """
+    os.makedirs(os.path.dirname(_TOKEN_FILE), exist_ok=True)
+
+    # Intentar cargar desde disco
+    if os.path.exists(_TOKEN_FILE):
+        try:
+            with open(_TOKEN_FILE) as f:
+                saved = json.load(f)
+            if _time.time() < saved.get("expires_at", 0):
+                return saved["access_token"]
+        except Exception:
+            pass
+
+    # Pedir token nuevo a RC
     url = f"{RC_SERVER_URL}/restapi/oauth/token"
     auth_header = base64.b64encode(f"{RC_CLIENT_ID}:{RC_CLIENT_SECRET}".encode()).decode()
     headers = {
@@ -34,7 +58,17 @@ def obtener_access_token():
     }
     resp = requests.post(url, headers=headers, data=data)
     if resp.status_code == 200:
-        return resp.json().get("access_token")
+        token_data = resp.json()
+        access_token = token_data.get("access_token")
+        expires_in   = token_data.get("expires_in", 3600)
+        # Guardar en disco con 5 min de margen
+        with open(_TOKEN_FILE, "w") as f:
+            json.dump({
+                "access_token": access_token,
+                "expires_at": _time.time() + expires_in - 300
+            }, f)
+        print(f"[RC] Token nuevo obtenido y guardado (expira en {expires_in}s).")
+        return access_token
     else:
         print(f"[RC] Error al obtener token: {resp.text}")
         return None

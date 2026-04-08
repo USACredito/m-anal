@@ -45,11 +45,15 @@ def obtener_token_rc_cached() -> str | None:
         return _rc_token_cache
     try:
         from scripts.sync_ringcentral import obtener_access_token
-        _rc_token_cache = obtener_access_token()
-        print(f"  [RC] Token obtenido: {_rc_token_cache[:20]}...")
+        token = obtener_access_token()
+        if token:
+            _rc_token_cache = token
+            print(f"  [RC] Token listo: {token[:20]}...")
+        else:
+            print("  [RC] No se pudo obtener token (rate limit o credenciales).")
         return _rc_token_cache
     except Exception as e:
-        print(f"  [WARN] No se pudo obtener token RC: {e}")
+        print(f"  [WARN] Error importando sync_ringcentral: {e}")
         return None
 
 
