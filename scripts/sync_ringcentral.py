@@ -12,6 +12,7 @@ from dotenv import load_dotenv
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scripts.nocodb_client import listar_registros, crear_registro
+from scripts.agentes_config import clasificar_llamada
 
 load_dotenv()
 
@@ -111,9 +112,6 @@ def sync_calls(dias_atras=8):
     ids_existentes = _get_ids_existentes()
     print(f"[RC] IDs ya en NocoDB: {len(ids_existentes)}")
 
-    # Obtener lista de agentes para clasificar (Setter/Closer)
-    agentes = {a.get("Nombre"): a for a in listar_registros("agentes")}
-
     nuevas = 0
     for call in calls:
         call_id = str(call.get("id"))
@@ -130,16 +128,8 @@ def sync_calls(dias_atras=8):
             print(f"  [SKIP] Llamada {call_id} descartada por baja duración ({duracion_min} min).")
             continue
 
-        # Clasificar como setter/closer según tabla agentes
-        agente = agentes.get(from_name) or agentes.get(to_name)
-        rol = agente.get("Tipo", "ventas").lower() if agente else "ventas"
-        # Normalizar: si el tipo contiene setter→setter, closer→closer
-        if "setter" in rol:
-            tipo_llamada = "setter"
-        elif "closer" in rol:
-            tipo_llamada = "closer"
-        else:
-            tipo_llamada = "ventas"
+        # Clasificar setter/closer usando la lista oficial de agentes
+        tipo_llamada = clasificar_llamada(from_name, to_name)
 
         # Extraer URL de grabación
         recording = call.get("recording")

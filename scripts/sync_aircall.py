@@ -11,6 +11,7 @@ from dotenv import load_dotenv
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scripts.nocodb_client import listar_registros, crear_registro
+from scripts.agentes_config import clasificar_llamada
 load_dotenv()
 
 # Configuración Aircall
@@ -55,9 +56,6 @@ def sync_calls():
         ids_existentes = _get_ids_existentes()
         print(f"[Aircall] IDs ya en NocoDB: {len(ids_existentes)}")
 
-        # Obtener agentes para clasificar
-        agentes = {a.get("Nombre"): a for a in listar_registros("agentes")}
-
         nuevas = 0
         for call in calls_with_recording:
             call_id = str(call.get("id"))
@@ -74,15 +72,8 @@ def sync_calls():
                 print(f"  [SKIP] Llamada {call_id} descartada por baja duración ({duracion_min} min).")
                 continue
 
-            # Clasificar setter/closer
-            agente = agentes.get(user_name)
-            rol = agente.get("Tipo", "ventas").lower() if agente else "ventas"
-            if "setter" in rol:
-                tipo_llamada = "setter"
-            elif "closer" in rol:
-                tipo_llamada = "closer"
-            else:
-                tipo_llamada = "ventas"
+            # Clasificar setter/closer usando la lista oficial de agentes
+            tipo_llamada = clasificar_llamada(user_name, contact_number)
 
             data_noco = {
                 "ID Fathom": call_id,

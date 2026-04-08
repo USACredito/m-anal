@@ -178,6 +178,8 @@ def main():
     parser.add_argument("--dias", type=int, default=8, help="Días hacia atrás (default: 8)")
     parser.add_argument("--tipo", choices=["setter", "closer", "todos"], default="todos",
                         help="Filtrar por tipo de llamada")
+    parser.add_argument("--forzar-tipo", dest="forzar_tipo", choices=["setter", "closer"],
+                        help="Forzar TODAS las llamadas como este tipo, ignorando el campo Tipo en NocoDB")
     parser.add_argument("--dry-run", action="store_true",
                         help="Mostrar qué se procesaría sin guardar nada")
     args = parser.parse_args()
@@ -185,12 +187,14 @@ def main():
     hoy = datetime.now()
     fecha_inicio = (hoy - timedelta(days=args.dias)).strftime("%Y-%m-%d")
     fecha_fin    = hoy.strftime("%Y-%m-%d")
+    forzar = args.forzar_tipo  # "setter", "closer" o None
 
     print(f"""
 ==============================================================
   RECALIFICACION MASIVA: {fecha_inicio} -> {fecha_fin}
-  Tipo filtro: {args.tipo}
-  Modo: {'DRY-RUN (no guarda nada)' if args.dry_run else 'PRODUCCION (guarda en NocoDB)'}
+  Tipo filtro : {args.tipo}
+  Forzar tipo : {forzar or '(no, usar campo Tipo de NocoDB)'}
+  Modo        : {'DRY-RUN (no guarda nada)' if args.dry_run else 'PRODUCCION (guarda en NocoDB)'}
 ==============================================================
 """)
 
@@ -202,11 +206,20 @@ def main():
         if r.get("Transcripción Texto")
         and fecha_inicio <= (r.get("Fecha") or "") <= fecha_fin
         and (r.get("Duración (min)") or 0) >= 2
-        and (args.tipo == "todos" or (r.get("Tipo") or "").lower() == args.tipo)
     ]
+
+    # Si se fuerza un tipo, sobreescribir el campo Tipo en memoria para todas
+    if forzar:
+        for r in llamadas:
+            r["Tipo"] = forzar
+    elif args.tipo != "todos":
+        llamadas = [r for r in llamadas if (r.get("Tipo") or "").lower() == args.tipo]
 
     if not llamadas:
         print(f"No hay llamadas con transcripción en los últimos {args.dias} días.")
+        if not forzar:
+            print("  TIP: Si tus llamadas tienen Tipo='ventas', usa --forzar-tipo setter")
+            print("       Ej: python scripts/recalificar_8dias.py --forzar-tipo setter")
         return
 
     setters_l = [r for r in llamadas if (r.get("Tipo") or "").lower() == "setter"]
@@ -216,9 +229,9 @@ def main():
     print(f"Llamadas a procesar: {len(llamadas)} total")
     print(f"  Setters: {len(setters_l)}  |  Closers: {len(closers_l)}  |  Sin tipo: {len(otros_l)}")
 
-    if otros_l:
+    if otros_l and not forzar:
         print(f"\n  AVISO: {len(otros_l)} llamadas sin tipo setter/closer seran omitidas.")
-        print(f"  IDs: {[r.get('ID Fathom') for r in otros_l[:10]]}")
+        print(f"  Usa --forzar-tipo setter o --forzar-tipo closer para procesarlas.")
 
     # Cargar mapas de calificaciones existentes (para upsert)
     print("\nCargando calificaciones existentes para upsert...")
