@@ -18,7 +18,7 @@ PROJECT_ID = os.getenv("NOCODB_PROJECT_ID", "p9sqt7wk1bkr0lq")
 MAPA_TABLAS = {
     # Versión 3: Tablas totalmente nuevas para evitar conflictos de alias en NocoDB
     "llamadas_ventas": "v3_llamadas_ventas",
-    "agentes": "v2_agentes", # Agentes lo mantenemos o v2 si es necesario
+    "agentes": "v3_agentes",
     "calificaciones_leads": "v3_calificaciones_leads",
     "calificaciones_closers": "v3_calificaciones_closers",
     "calificaciones_setters": "v3_calificaciones_setters",
