@@ -16,16 +16,13 @@ NOCODB_API_TOKEN = os.getenv("NOCODB_API_TOKEN", "")
 PROJECT_ID = os.getenv("NOCODB_PROJECT_ID", "p9sqt7wk1bkr0lq")
 
 MAPA_TABLAS = {
-    "llamadas_ventas": "mb7fss7inq1ieul",
-    "llamadas_soporte": "mnfzrhp1xhwfhiw",
-    "llamadas_onboarding": "m33yp6t545w8h7t",
-    "agentes": "mabd7x8ql6q6rxj",
-    "calificaciones_leads": "m29g0pndl4ezy2u",
-    "calificaciones_closers": "mofs7kjyrc24le7",
-    "calificaciones_onboarding": "ms81roptu915w1g",
-    "lista_emails": "ms5wjsk10hmlif6",
-    "resumen_mensual_calidad": "m1nqjj8zpadeii5",
-    "features": "mfx4a2r2bl1v00k"
+    # Usamos los nombres reales de las tablas para que la API las resuelva dinámicamente
+    "llamadas_ventas": "llamadas_ventas",
+    "agentes": "agentes",
+    "calificaciones_leads": "calificaciones_leads",
+    "calificaciones_closers": "calificaciones_closers",
+    "calificaciones_setters": "calificaciones_setters",
+    "resumen_mensual_calidad": "resumen_mensual_calidad"
 }
 
 NOCODB_BASE_API_URL = f"{RAW_URL}/api/v3"
