@@ -200,9 +200,10 @@ def calificar_ventas(registros: list) -> tuple:
             (p for p in partes if clasificar_participante(p) != "desconocido"),
             partes[0] if partes else "Desconocido"
         )
+        agente_conocido = clasificar_participante(nombre_agente_meta) != "desconocido"
         contexto_agente = f"\n\n[CONTEXTO]: El agente que realizó esta llamada se llama: {nombre_agente_meta}."
 
-        print(f"\n  → [{call_id}] Tipo: {tipo_llamada or 'sin definir'}")
+        print(f"\n  → [{call_id}] Tipo: {tipo_llamada or 'sin definir'} | Agente: {nombre_agente_meta}")
 
         # ── Calificar Lead (siempre, independiente del tipo) ──
         print(f"    Evaluando LEAD...")
@@ -224,7 +225,7 @@ def calificar_ventas(registros: list) -> tuple:
                 print(f"    [ERROR] No se pudo guardar calificacion_lead: {e}")
 
         # ── Calificar según Tipo: SETTER o CLOSER ──
-        if tipo_llamada in ("setter",):
+        if tipo_llamada in ("setter",) and agente_conocido:
             print(f"    Evaluando SETTER...")
             resultado_setter = llamar_openai_json(PROMPT_CALIDAD_SETTER, transcripcion + contexto_agente)
             if "error" not in resultado_setter:
@@ -257,7 +258,7 @@ def calificar_ventas(registros: list) -> tuple:
                 except Exception as e:
                     print(f"    [ERROR] No se pudo guardar calificacion_setter: {e}")
 
-        elif tipo_llamada in ("closer",):
+        elif tipo_llamada in ("closer",) and agente_conocido:
             print(f"    Evaluando CLOSER...")
             resultado_closer = llamar_openai_json(PROMPT_CALIDAD_CLOSER, transcripcion + contexto_agente)
             if "error" not in resultado_closer:
@@ -291,6 +292,8 @@ def calificar_ventas(registros: list) -> tuple:
                 except Exception as e:
                     print(f"    [ERROR] No se pudo guardar calificacion_closer: {e}")
 
+        elif not agente_conocido:
+            print(f"    [SKIP] {call_id}: agente '{nombre_agente_meta}' no reconocido. No se guarda setter/closer.")
         else:
             # Tipo desconocido: intentar identificar por contexto (califica ambos)
             print(f"    [WARN] Tipo de llamada desconocido ('{tipo_llamada}'). Calificando como setter y closer.")

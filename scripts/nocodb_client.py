@@ -116,3 +116,16 @@ def obtener_registro(table_name: str, record_id: int) -> dict:
     resp = requests.get(url, headers=HEADERS, timeout=15)
     resp.raise_for_status()
     return resp.json()
+
+
+def borrar_registros(table_name: str, ids: list) -> int:
+    """
+    Borra registros por sus IDs internos de NocoDB (bulk delete).
+    Retorna el HTTP status code.
+    """
+    if not ids:
+        return 0
+    url = _get_table_url(table_name)
+    resp = requests.delete(url, headers=HEADERS, json={"ids": ids}, timeout=15)
+    resp.raise_for_status()
+    return resp.status_code
