@@ -123,13 +123,21 @@ def clasificar_llamada(from_name: str, to_name: str) -> str:
     return "ventas"
 
 
-def es_setter_oficial(nombre: str) -> bool:
-    """Retorna True si el nombre corresponde a un setter oficial."""
+def clasificar_participante(nombre: str) -> str:
+    """Retorna 'setter', 'closer' o 'desconocido' según el nombre."""
     n = _norm(nombre)
-    return any(all(t in n for t in patron.split()) for patron in _SETTER_NAMES)
+    for s in _SETTER_NAMES:
+        if all(t in n for t in s.split()):
+            return "setter"
+    for c in _CLOSER_NAMES:
+        if all(t in n for t in c.split()):
+            return "closer"
+    return "desconocido"
+
+
+def es_setter_oficial(nombre: str) -> bool:
+    return clasificar_participante(nombre) == "setter"
 
 
 def es_closer_oficial(nombre: str) -> bool:
-    """Retorna True si el nombre corresponde a un closer oficial."""
-    n = _norm(nombre)
-    return any(all(t in n for t in patron.split()) for patron in _CLOSER_NAMES)
+    return clasificar_participante(nombre) == "closer"
