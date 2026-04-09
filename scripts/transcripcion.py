@@ -30,7 +30,9 @@ os.makedirs(TMP_DIR, exist_ok=True)
 
 TABLAS = ["llamadas_ventas"]
 BATCH_SIZE = 200   # Procesar máx 200 llamadas por ejecución para no sobrecargar APIs
-DELAY_ENTRE_DESCARGAS = 2  # segundos entre descargas
+DELAY_ENTRE_DESCARGAS = 3  # segundos entre descargas
+RC_RATE_LIMIT_WAIT   = 60  # segundos a esperar si RC devuelve 429
+RC_MAX_REINTENTOS    = 5   # reintentos máximos por llamada
 
 # Token RC cacheado para toda la sesión (se obtiene 1 sola vez)
 _rc_token_cache = None
@@ -97,29 +99,55 @@ def descargar_audio(url: str, call_id: str, titulo: str = ""):
             print(f"  [SKIP] Sin token RC — saltando {call_id}")
             return None
 
-    try:
-        resp = requests.get(url, headers=headers, stream=True, timeout=60)
+    for intento in range(1, RC_MAX_REINTENTOS + 1):
+        try:
+            resp = requests.get(url, headers=headers, stream=True, timeout=60)
 
-        # Aircall URL expirada: renovar y reintentar
-        if resp.status_code in (403, 404) and not es_ringcentral:
-            print(f"    [WARN] URL expirada (HTTP {resp.status_code}). Renovando desde Aircall API...")
-            nueva_url = renovar_url_aircall(call_id)
-            if nueva_url:
-                resp = requests.get(nueva_url, stream=True, timeout=60)
+            # RingCentral rate limit → esperar y reintentar
+            if resp.status_code == 429:
+                retry_after = int(resp.headers.get("Retry-After", RC_RATE_LIMIT_WAIT))
+                espera = max(retry_after, RC_RATE_LIMIT_WAIT)
+                print(f"  [429] Rate limit RC (intento {intento}/{RC_MAX_REINTENTOS}). Esperando {espera}s...")
+                time.sleep(espera)
+                # Refrescar token por si venció durante la espera
+                global _rc_token_cache
+                _rc_token_cache = None
+                token = obtener_token_rc_cached()
+                if token:
+                    headers["Authorization"] = f"Bearer {token}"
+                continue
 
-        resp.raise_for_status()
+            # Aircall URL expirada: renovar y reintentar
+            if resp.status_code in (403, 404) and not es_ringcentral:
+                print(f"    [WARN] URL expirada (HTTP {resp.status_code}). Renovando desde Aircall API...")
+                nueva_url = renovar_url_aircall(call_id)
+                if nueva_url:
+                    resp = requests.get(nueva_url, stream=True, timeout=60)
 
-        with open(ruta_local, 'wb') as f:
-            for chunk in resp.iter_content(chunk_size=8192):
-                f.write(chunk)
+            resp.raise_for_status()
 
-        size_kb = os.path.getsize(ruta_local) // 1024
-        print(f"    [OK] Descargado: {size_kb} KB")
-        return ruta_local
+            with open(ruta_local, 'wb') as f:
+                for chunk in resp.iter_content(chunk_size=8192):
+                    f.write(chunk)
 
-    except Exception as e:
-        print(f"  [ERROR] No se pudo descargar audio: {e}")
-        return None
+            size_kb = os.path.getsize(ruta_local) // 1024
+            print(f"    [OK] Descargado: {size_kb} KB")
+            return ruta_local
+
+        except requests.exceptions.HTTPError as e:
+            if e.response is not None and e.response.status_code == 429:
+                espera = RC_RATE_LIMIT_WAIT * intento
+                print(f"  [429] Rate limit (intento {intento}/{RC_MAX_REINTENTOS}). Esperando {espera}s...")
+                time.sleep(espera)
+                continue
+            print(f"  [ERROR] No se pudo descargar audio: {e}")
+            return None
+        except Exception as e:
+            print(f"  [ERROR] No se pudo descargar audio: {e}")
+            return None
+
+    print(f"  [ERROR] {call_id}: máximo de reintentos alcanzado ({RC_MAX_REINTENTOS}).")
+    return None
 
 
 def transcribir_con_deepgram(ruta_audio: str, call_id: str) -> str | None:
