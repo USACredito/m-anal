@@ -12,7 +12,7 @@ from dotenv import load_dotenv
 import sys
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scripts.nocodb_client import listar_registros, crear_registro
-from scripts.agentes_config import clasificar_llamada
+from scripts.agentes_config import clasificar_llamada_rc
 
 load_dotenv()
 
@@ -120,16 +120,18 @@ def sync_calls(dias_atras=8):
         if call_id in ids_existentes:
             continue
 
-        from_name = call.get("from", {}).get("name", "Desconocido")
-        to_name = call.get("to", {}).get("name", "Desconocido")
+        from_name   = call.get("from", {}).get("name", "Desconocido")
+        to_name     = call.get("to", {}).get("name", "Desconocido")
+        from_ext_id = call.get("from", {}).get("extensionId")
+        to_ext_id   = call.get("to", {}).get("extensionId")
 
         duracion_min = int(call.get("duration", 0) / 60)
         if duracion_min < 2:
             print(f"  [SKIP] Llamada {call_id} descartada por baja duración ({duracion_min} min).")
             continue
 
-        # Clasificar setter/closer usando la lista oficial de agentes
-        tipo_llamada = clasificar_llamada(from_name, to_name)
+        # Clasificar setter/closer por extensionId exacto
+        tipo_llamada = clasificar_llamada_rc(from_ext_id, to_ext_id)
 
         # Extraer URL de grabación
         recording = call.get("recording")
