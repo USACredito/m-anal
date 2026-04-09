@@ -100,11 +100,11 @@ import unicodedata
 def _norm(s: str) -> str:
     return unicodedata.normalize("NFD", s.lower().strip()).encode("ascii", "ignore").decode()
 
-_RC_SETTER_NAMES = [_norm(n) for n in [
+_SETTER_NAMES = [_norm(n) for n in [
     "ridchell ladera", "gianella romero", "yanela romero", "edduar pena",
     "nora castillo", "norddelys rodriguez", "roque vargas", "marianny cuauro", "victor cuauro",
 ]]
-_RC_CLOSER_NAMES = [_norm(n) for n in [
+_CLOSER_NAMES = [_norm(n) for n in [
     "carolina santana", "carlen gonzalez", "francelis sanchez", "juan martinez",
     "jesus medina", "anakarina kristen", "ana karina kristen", "yelitza castillo",
     "leopoldo aponte", "leopoldo", "patricia medina",
@@ -114,10 +114,10 @@ def clasificar_llamada(from_name: str, to_name: str) -> str:
     """Fallback por nombre para fix_tipo_llamadas.py sobre registros históricos."""
     for nombre in [from_name, to_name]:
         n = _norm(nombre)
-        for s in _RC_SETTER_NAMES:
+        for s in _SETTER_NAMES:
             if all(t in n for t in s.split()):
                 return "setter"
-        for c in _RC_CLOSER_NAMES:
+        for c in _CLOSER_NAMES:
             if all(t in n for t in c.split()):
                 return "closer"
     return "ventas"
