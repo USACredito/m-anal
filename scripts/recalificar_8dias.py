@@ -30,6 +30,7 @@ from scripts.calificaciones import (
     PROMPT_CALIDAD_CLOSER,
     PROMPT_CALIDAD_LEAD,
 )
+from scripts.agentes_config import clasificar_participante
 
 load_dotenv()
 
@@ -77,7 +78,10 @@ def procesar_llamada(r: dict, mapa_setters: dict, mapa_closers: dict,
     tipo      = (r.get("Tipo") or "").lower()
     participantes = r.get("Participantes", "")
     partes    = [p.strip() for p in participantes.split(",") if p.strip()]
-    nombre_agente_meta = partes[0] if partes else "Desconocido"
+    nombre_agente_meta = next(
+        (p for p in partes if clasificar_participante(p) != "desconocido"),
+        partes[0] if partes else "Desconocido"
+    )
     contexto  = f"\n\n[CONTEXTO]: El agente que realizó esta llamada se llama: {nombre_agente_meta}."
     transcripcion = r.get("Transcripción Texto", "")
 
