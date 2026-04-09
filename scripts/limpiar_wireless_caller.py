@@ -34,8 +34,8 @@ def limpiar(tabla: str, campo_agente: str, dry_run: bool):
                 print(f"    [DRY-RUN] Id={r['Id']} | {campo_agente}={r.get(campo_agente)} | Fecha={r.get('Fecha Llamada')}")
         return
 
-    status = borrar_registros(tabla, ids_wc)
-    print(f"  → Borrados {len(ids_wc)} registros (HTTP {status}).")
+    borrados = borrar_registros(tabla, ids_wc)
+    print(f"  → Borrados {borrados}/{len(ids_wc)} registros.")
 
 
 def main():
