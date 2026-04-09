@@ -121,11 +121,18 @@ def obtener_registro(table_name: str, record_id: int) -> dict:
 def borrar_registros(table_name: str, ids: list) -> int:
     """
     Borra registros por sus IDs internos de NocoDB (bulk delete).
-    Retorna el HTTP status code.
+    NocoDB v3 espera un array de objetos: [{"id": 1}, {"id": 2}, ...]
+    Retorna el HTTP status code del último batch.
     """
     if not ids:
         return 0
     url = _get_table_url(table_name)
-    resp = requests.delete(url, headers=HEADERS, json={"ids": ids}, timeout=15)
-    resp.raise_for_status()
-    return resp.status_code
+    # Procesar en lotes de 100 para evitar payloads muy grandes
+    status = 0
+    for i in range(0, len(ids), 100):
+        lote = ids[i:i+100]
+        body = [{"id": nid} for nid in lote]
+        resp = requests.delete(url, headers=HEADERS, json=body, timeout=15)
+        resp.raise_for_status()
+        status = resp.status_code
+    return status
