@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from scripts.nocodb_client import crear_registro, listar_registros
+from scripts.agentes_config import clasificar_participante
 
 load_dotenv()
 
@@ -194,7 +195,11 @@ def calificar_ventas(registros: list) -> tuple:
         participantes = r.get("Participantes", "")
         tipo_llamada = (r.get("Tipo") or "").lower()
         partes = [p.strip() for p in participantes.split(",") if p.strip()]
-        nombre_agente_meta = partes[0] if partes else "Desconocido"
+        # Identificar cuál participante es el agente (no siempre es el primero en RC)
+        nombre_agente_meta = next(
+            (p for p in partes if clasificar_participante(p) != "desconocido"),
+            partes[0] if partes else "Desconocido"
+        )
         contexto_agente = f"\n\n[CONTEXTO]: El agente que realizó esta llamada se llama: {nombre_agente_meta}."
 
         print(f"\n  → [{call_id}] Tipo: {tipo_llamada or 'sin definir'}")
