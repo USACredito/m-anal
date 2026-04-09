@@ -283,16 +283,20 @@ def api_metricas():
             # ── Closers ──────────────────────────────────────────────────────
             todas_closers = listar_registros("calificaciones_closers")
             # Agrupar por nombre del Closer
-            closers_map = {}
+            closers_map = {}   # key: nombre normalizado, value: [registros]
+            closers_display = {}  # key: nombre normalizado, value: nombre original
             for r in todas_closers:
                 nombre = r.get("Closer") or r.get("nombre_closer", "Desconocido")
                 if not es_closer_oficial(nombre):
                     continue
-                if nombre not in closers_map:
-                    closers_map[nombre] = []
-                closers_map[nombre].append(r)
+                key = nombre.lower().strip()
+                if key not in closers_map:
+                    closers_map[key] = []
+                    closers_display[key] = nombre.title()
+                closers_map[key].append(r)
 
-            for nombre, calificaciones in closers_map.items():
+            for key, calificaciones in closers_map.items():
+                nombre = closers_display[key]
                 campo_total = "Nota Total"
                 dims = ["Rapport", "Descubrimiento", "Presentación", "Objeciones", "Cierre"]
                 valores = [float(c.get(campo_total) or 0) for c in calificaciones]
@@ -328,15 +332,19 @@ def api_metricas():
             # ── Setters ──────────────────────────────────────────────────────
             todas_setters = listar_registros("calificaciones_setters")
             setters_map = {}
+            setters_display = {}
             for r in todas_setters:
                 nombre = r.get("Setter") or r.get("nombre_setter", "Desconocido")
                 if not es_setter_oficial(nombre):
                     continue
-                if nombre not in setters_map:
-                    setters_map[nombre] = []
-                setters_map[nombre].append(r)
+                key = nombre.lower().strip()
+                if key not in setters_map:
+                    setters_map[key] = []
+                    setters_display[key] = nombre.title()
+                setters_map[key].append(r)
 
-            for nombre, calificaciones in setters_map.items():
+            for key, calificaciones in setters_map.items():
+                nombre = setters_display[key]
                 campo_total = "Nota Total"
                 dims = ["Rapport", "Identificación Dolor", "Venta Cita", "Objeciones"]
                 valores = [float(c.get(campo_total) or 0) for c in calificaciones]
@@ -413,7 +421,7 @@ def api_llamadas():
         }})
     try:
         fecha = request.args.get("fecha", "")
-        where = f"(Fecha Llamada,eq,{fecha})" if fecha else ""
+        where = f"(Fecha Llamada,like,{fecha}%)" if fecha else ""
         closers = listar_registros("calificaciones_closers", where=where)
         setters = listar_registros("calificaciones_setters", where=where)
         return jsonify({"demo": False, "datos": {"closers": closers, "setters": setters}})
