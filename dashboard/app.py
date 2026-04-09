@@ -423,6 +423,11 @@ def api_llamadas():
         fecha = request.args.get("fecha", "")
         closers = listar_registros("calificaciones_closers")
         setters = listar_registros("calificaciones_setters")
+
+        # Filtrar agentes no reconocidos (WIRELESS CALLER, vacíos, etc.)
+        closers = [r for r in closers if es_closer_oficial(r.get("Closer") or "")]
+        setters = [r for r in setters if es_setter_oficial(r.get("Setter") or "")]
+
         if fecha:
             def _fecha_registro(r):
                 f = r.get("Fecha Llamada") or r.get("CreatedAt", "")
