@@ -403,15 +403,19 @@ def _build_demo_metricas():
 
 @app.route("/api/llamadas", methods=["GET"])
 def api_llamadas():
-    """Retorna calificaciones individuales de closers y setters para la vista de llamadas."""
+    """Retorna calificaciones individuales de closers y setters para la vista de llamadas.
+    Query param opcional: ?fecha=YYYY-MM-DD para filtrar por fecha exacta.
+    """
     if not NOCODB_CONFIGURED:
         return jsonify({"demo": True, "datos": {
             "closers": DEMO_CALIFICACIONES_CLOSERS,
             "setters": DEMO_CALIFICACIONES_SETTERS
         }})
     try:
-        closers = listar_registros("calificaciones_closers")
-        setters = listar_registros("calificaciones_setters")
+        fecha = request.args.get("fecha", "")
+        where = f"(Fecha Llamada,eq,{fecha})" if fecha else ""
+        closers = listar_registros("calificaciones_closers", where=where)
+        setters = listar_registros("calificaciones_setters", where=where)
         return jsonify({"demo": False, "datos": {"closers": closers, "setters": setters}})
     except Exception as e:
         print(f"[DASHBOARD] Error leyendo llamadas: {e}")

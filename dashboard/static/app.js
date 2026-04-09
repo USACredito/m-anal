@@ -65,7 +65,16 @@ function switchTab(tab, el) {
     document.getElementById("pageTitle").textContent = titles[tab][0];
     document.getElementById("pageSub").textContent  = titles[tab][1];
 
-    if (tab === "llamadas") cargarLlamadas();
+    if (tab === "llamadas") {
+        // Preseleccionar fecha de hoy si no hay filtro activo
+        if (!_filtroFechaLlamadas) {
+            const hoy = new Date().toISOString().split("T")[0];
+            _filtroFechaLlamadas = hoy;
+            const picker = document.getElementById("fechaLlamadas");
+            if (picker) picker.value = hoy;
+        }
+        cargarLlamadas();
+    }
 }
 
 // ─── MÓDULO: MÉTRICAS ─────────────────────────────────────────
@@ -298,7 +307,9 @@ async function cargarLlamadas() {
     const container = document.getElementById("llamadasContainer");
     container.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:48px">Cargando llamadas...</p>`;
     try {
-        const r = await fetch(`${API}/api/llamadas`);
+        const fecha = _filtroFechaLlamadas || "";
+        const url = fecha ? `${API}/api/llamadas?fecha=${fecha}` : `${API}/api/llamadas`;
+        const r = await fetch(url);
         const data = await r.json();
         _todasLlamadas = data.datos || { closers: [], setters: [] };
         renderizarLlamadas(_filtroLlamadas);
@@ -315,14 +326,14 @@ function filtrarLlamadas(filtro, btn) {
 }
 
 function filtrarPorFecha(fecha) {
-    _filtroFechaLlamadas = fecha; // "YYYY-MM-DD" o vacío
-    renderizarLlamadas(_filtroLlamadas);
+    _filtroFechaLlamadas = fecha || null;
+    cargarLlamadas();
 }
 
 function quitarFiltroFecha() {
     _filtroFechaLlamadas = null;
     document.getElementById("fechaLlamadas").value = "";
-    renderizarLlamadas(_filtroLlamadas);
+    cargarLlamadas();
 }
 
 function renderizarLlamadas(filtro) {
