@@ -29,8 +29,8 @@ TMP_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 os.makedirs(TMP_DIR, exist_ok=True)
 
 TABLAS = ["llamadas_ventas"]
-BATCH_SIZE = 200   # Procesar máx 200 llamadas por ejecución para no sobrecargar APIs
-DELAY_ENTRE_DESCARGAS = 3  # segundos entre descargas
+BATCH_SIZE = 30    # Procesar máx 30 llamadas por ejecución (cron horario)
+DELAY_ENTRE_DESCARGAS = 5  # segundos entre descargas para no saturar RC
 RC_RATE_LIMIT_WAIT   = 60  # segundos a esperar si RC devuelve 429
 RC_MAX_REINTENTOS    = 5   # reintentos máximos por llamada
 
