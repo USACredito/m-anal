@@ -52,17 +52,12 @@ def clasificar_participante(nombre: str) -> str:
     nombre_lower = nombre.lower().strip()
 
     for s in SETTERS:
-        # Coincidencia exacta o substring
-        if s in nombre_lower or nombre_lower in s:
-            return "setter"
-        # Coincidencia por primer apellido (ej: "roque vargas escalona" → "roque vargas")
+        # Coincidencia exacta o todos los tokens del nombre config en el participante
         tokens_config = s.split()
         if all(t in nombre_lower for t in tokens_config):
             return "setter"
 
     for c in CLOSERS:
-        if c in nombre_lower or nombre_lower in c:
-            return "closer"
         tokens_config = c.split()
         if all(t in nombre_lower for t in tokens_config):
             return "closer"
