@@ -26,6 +26,15 @@ from scripts.nocodb_client import (
     actualizar_registro,
     listar_registros,
 )
+from scripts.agentes_config import _norm, _SETTER_NAMES, _CLOSER_NAMES
+
+def _es_agente_oficial(nombre: str, lista_norms: list) -> bool:
+    """Verifica si un nombre coincide con algún agente oficial (sin tildes)."""
+    n = _norm(nombre)
+    for patron in lista_norms:
+        if all(t in n for t in patron.split()):
+            return True
+    return False
 
 load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
 
@@ -285,6 +294,8 @@ def api_metricas():
             closers_map = {}
             for r in todas_closers:
                 nombre = r.get("Closer") or r.get("nombre_closer", "Desconocido")
+                if not _es_agente_oficial(nombre, _CLOSER_NAMES):
+                    continue
                 if nombre not in closers_map:
                     closers_map[nombre] = []
                 closers_map[nombre].append(r)
@@ -327,6 +338,8 @@ def api_metricas():
             setters_map = {}
             for r in todas_setters:
                 nombre = r.get("Setter") or r.get("nombre_setter", "Desconocido")
+                if not _es_agente_oficial(nombre, _SETTER_NAMES):
+                    continue
                 if nombre not in setters_map:
                     setters_map[nombre] = []
                 setters_map[nombre].append(r)
