@@ -421,9 +421,14 @@ def api_llamadas():
         }})
     try:
         fecha = request.args.get("fecha", "")
-        where = f"(Fecha Llamada,like,{fecha}%)" if fecha else ""
-        closers = listar_registros("calificaciones_closers", where=where)
-        setters = listar_registros("calificaciones_setters", where=where)
+        closers = listar_registros("calificaciones_closers")
+        setters = listar_registros("calificaciones_setters")
+        if fecha:
+            def _fecha_registro(r):
+                f = r.get("Fecha Llamada") or r.get("CreatedAt", "")
+                return str(f)[:10]
+            closers = [r for r in closers if _fecha_registro(r) == fecha]
+            setters = [r for r in setters if _fecha_registro(r) == fecha]
         return jsonify({"demo": False, "datos": {"closers": closers, "setters": setters}})
     except Exception as e:
         print(f"[DASHBOARD] Error leyendo llamadas: {e}")
