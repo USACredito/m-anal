@@ -120,18 +120,17 @@ def obtener_registro(table_name: str, record_id: int) -> dict:
 
 def borrar_registros(table_name: str, ids: list) -> int:
     """
-    Borra registros uno por uno por su ID interno de NocoDB.
-    Retorna el número de registros borrados.
+    Borra registros enviando DELETE al endpoint /records con {"id": X} en el body,
+    igual que PATCH pero sin fields. Retorna el número de registros borrados.
     """
     if not ids:
         return 0
-    base_url = _get_table_url(table_name)
+    url = _get_table_url(table_name)
     borrados = 0
     for nid in ids:
-        url = f"{base_url}/{nid}"
-        resp = requests.delete(url, headers=HEADERS, timeout=15)
+        resp = requests.delete(url, headers=HEADERS, json={"id": nid}, timeout=15)
         if resp.status_code in (200, 204):
             borrados += 1
         else:
-            print(f"  [WARN] No se pudo borrar id={nid}: HTTP {resp.status_code}")
+            print(f"  [WARN] No se pudo borrar id={nid}: HTTP {resp.status_code} — {resp.text[:100]}")
     return borrados
