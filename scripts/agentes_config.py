@@ -4,42 +4,35 @@ Lista definitiva de setters y closers del equipo.
 Este módulo es la fuente de verdad para clasificar llamadas.
 """
 
-# Nombres normalizados (en minúsculas para comparación).
-# Se acepta coincidencia parcial: si cualquier token de la lista
-# aparece en el nombre del participante, se clasifica.
+import unicodedata
+
+def _norm(s: str) -> str:
+    """Minúsculas + elimina tildes para comparación robusta."""
+    return unicodedata.normalize("NFD", s.lower().strip()).encode("ascii", "ignore").decode()
 
 SETTERS = [
     "ridchell ladera",
     "gianella romero",
-    "yanela romero",       # variante común de gianella
+    "yanela romero",
     "edduar pena",
-    "edduar peña",
     "nora castillo",
     "norddelys rodriguez",
-    "norddelys rodríguez",
     "roque vargas",
     "marianny cuauro",
     "victor cuauro",
-    "víctor cuauro",
 ]
 
 CLOSERS = [
     "carolina santana",
     "carlen gonzalez",
-    "carlen gonzález",
     "francelis sanchez",
-    "francelís sanchez",
-    "francelis sánchez",
     "juan martinez",
-    "juan martínez",
     "jesus medina",
-    "jesús medina",
     "anakarina kristen",
     "yelitza castillo",
     "grey hernandez",
-    "grey hernández",
     "leopoldo aponte",
-    "leopoldo",            # aparece solo en algunas llamadas
+    "leopoldo",
     "patricia medina",
 ]
 
@@ -47,19 +40,18 @@ CLOSERS = [
 def clasificar_participante(nombre: str) -> str:
     """
     Dado el nombre de un participante, retorna 'setter', 'closer' o 'desconocido'.
-    Compara en minúsculas y acepta coincidencia parcial por token.
+    Compara sin tildes y acepta coincidencia por todos los tokens del nombre config.
     """
-    nombre_lower = nombre.lower().strip()
+    nombre_norm = _norm(nombre)
 
     for s in SETTERS:
-        # Coincidencia exacta o todos los tokens del nombre config en el participante
-        tokens_config = s.split()
-        if all(t in nombre_lower for t in tokens_config):
+        tokens = _norm(s).split()
+        if all(t in nombre_norm for t in tokens):
             return "setter"
 
     for c in CLOSERS:
-        tokens_config = c.split()
-        if all(t in nombre_lower for t in tokens_config):
+        tokens = _norm(c).split()
+        if all(t in nombre_norm for t in tokens):
             return "closer"
 
     return "desconocido"
