@@ -12,7 +12,8 @@ Acceso: http://localhost:5050
 import json
 import os
 import sys
-from datetime import datetime, date
+from collections import defaultdict
+from datetime import datetime, date, timedelta
 
 import requests as http_requests
 from flask import Flask, jsonify, render_template, request
@@ -462,6 +463,138 @@ def api_resumen_mensual():
     return jsonify({"demo": True, "datos": demo})
 
 
+def construir_contexto_chat(contexto_tipo: str, limite: int) -> str:
+    """
+    Construye un contexto compacto y pre-agregado para el agente IA.
+    En vez de enviar N registros crudos, calcula estadísticas por agente,
+    temas frecuentes y tendencias. Output: ~5-15 KB independiente del volumen.
+    """
+    hoy = datetime.now().date()
+    hace_7  = hoy - timedelta(days=7)
+    hace_30 = hoy - timedelta(days=30)
+    partes  = []
+
+    def _float(v):
+        try: return float(v) if v is not None else None
+        except: return None
+
+    def _parse_lista(val):
+        if not val: return []
+        if isinstance(val, list): return val
+        try: return json.loads(val)
+        except: return []
+
+    def _fecha(r):
+        f = str(r.get("Fecha Llamada") or "")[:10]
+        try: return date.fromisoformat(f)
+        except: return None
+
+    def _temas_top(registros, campo, top_n=15):
+        cnt = defaultdict(int)
+        for r in registros:
+            for item in _parse_lista(r.get(campo)):
+                k = str(item).strip()[:80].lower()
+                if k: cnt[k] += 1
+        return [k for k, _ in sorted(cnt.items(), key=lambda x: -x[1])[:top_n]]
+
+    def _stats_agentes(registros, campo_nombre, dims, campo_extra=None):
+        datos = defaultdict(lambda: {"notas": [], "dims": defaultdict(list), "extras": []})
+        for r in registros:
+            nombre = (r.get(campo_nombre) or "").strip()
+            if not nombre: continue
+            nota = _float(r.get("Nota Total"))
+            if nota is not None: datos[nombre]["notas"].append(nota)
+            for d in dims:
+                v = _float(r.get(d))
+                if v is not None: datos[nombre]["dims"][d].append(v)
+            if campo_extra:
+                datos[nombre]["extras"].append(str(r.get(campo_extra) or "").lower())
+
+        resultado = []
+        for nombre, d in sorted(datos.items()):
+            notas = d["notas"]
+            if not notas: continue
+            row = {"agente": nombre, "llamadas": len(notas),
+                   "nota_avg": round(sum(notas) / len(notas), 1)}
+            for dim in dims:
+                vals = d["dims"][dim]
+                if vals:
+                    key = (dim.lower()
+                           .replace(" ", "_")
+                           .replace("á","a").replace("é","e")
+                           .replace("í","i").replace("ó","o").replace("ú","u"))
+                    row[key] = round(sum(vals) / len(vals), 1)
+            if campo_extra and d["extras"]:
+                cnt = defaultdict(int)
+                for e in d["extras"]: cnt[e] += 1
+                row[campo_extra.lower().replace(" ","_").replace("?","").replace("¿","")] = dict(cnt)
+            resultado.append(row)
+        return sorted(resultado, key=lambda x: x["nota_avg"], reverse=True)
+
+    def _tendencia(registros, campo_nota):
+        recientes, anteriores = [], []
+        for r in registros:
+            fd, nota = _fecha(r), _float(r.get(campo_nota))
+            if fd is None or nota is None: continue
+            if fd >= hace_7: recientes.append(nota)
+            elif fd >= hace_30: anteriores.append(nota)
+        return {
+            "avg_7d":    round(sum(recientes)  / len(recientes),  1) if recientes  else None,
+            "n_7d":      len(recientes),
+            "avg_8_30d": round(sum(anteriores) / len(anteriores), 1) if anteriores else None,
+            "n_8_30d":   len(anteriores),
+        }
+
+    # ── SETTERS ──────────────────────────────────────────────────────────────
+    if contexto_tipo in ("setter", "todos"):
+        todos = [r for r in listar_registros("calificaciones_setters")
+                 if es_setter_oficial(r.get("Setter") or "")]
+        regs = todos[-limite:] if limite else todos
+        if regs:
+            dims = ["Rapport", "Identificación Dolor", "Venta Cita", "Objeciones"]
+            partes += [
+                f"=== SETTERS — {len(regs)} llamadas ===",
+                f"Tendencia: {json.dumps(_tendencia(regs, 'Nota Total'))}",
+                f"Por agente: {json.dumps(_stats_agentes(regs, 'Setter', dims, 'Agendó?'), ensure_ascii=False)}",
+                f"Áreas de mejora frecuentes: {json.dumps(_temas_top(regs, 'Áreas de Mejora'), ensure_ascii=False)}",
+                f"Fortalezas frecuentes: {json.dumps(_temas_top(regs, 'Puntos Fuertes'), ensure_ascii=False)}",
+            ]
+
+    # ── CLOSERS ──────────────────────────────────────────────────────────────
+    if contexto_tipo in ("closer", "todos"):
+        todos = [r for r in listar_registros("calificaciones_closers")
+                 if es_closer_oficial(r.get("Closer") or "")]
+        regs = todos[-limite:] if limite else todos
+        if regs:
+            dims = ["Rapport", "Descubrimiento", "Presentación", "Objeciones", "Cierre"]
+            partes += [
+                f"\n=== CLOSERS — {len(regs)} llamadas ===",
+                f"Tendencia: {json.dumps(_tendencia(regs, 'Nota Total'))}",
+                f"Por agente: {json.dumps(_stats_agentes(regs, 'Closer', dims, 'Resultado'), ensure_ascii=False)}",
+                f"Áreas de mejora frecuentes: {json.dumps(_temas_top(regs, 'Áreas de Mejora'), ensure_ascii=False)}",
+                f"Fortalezas frecuentes: {json.dumps(_temas_top(regs, 'Puntos Fuertes'), ensure_ascii=False)}",
+            ]
+
+    # ── LEADS ────────────────────────────────────────────────────────────────
+    if contexto_tipo in ("leads", "todos"):
+        todos = listar_registros("calificaciones_leads")
+        regs = todos[-limite:] if limite else todos
+        if regs:
+            niveles, notas = defaultdict(int), []
+            for l in regs:
+                niveles[str(l.get("Nivel") or "sin dato").lower()] += 1
+                nota = _float(l.get("Calificación"))
+                if nota is not None: notas.append(nota)
+            partes += [
+                f"\n=== LEADS — {len(regs)} evaluados ===",
+                f"Distribución: {json.dumps(dict(niveles))}",
+                f"Nota promedio: {round(sum(notas)/len(notas), 1) if notas else 'N/A'}",
+                f"Tendencia: {json.dumps(_tendencia(regs, 'Calificación'))}",
+            ]
+
+    return "\n".join(partes) if partes else "Sin datos disponibles."
+
+
 @app.route("/api/chat", methods=["POST"])
 def api_chat():
     """
@@ -481,74 +614,14 @@ def api_chat():
     if not mensaje:
         return jsonify({"error": "Mensaje vacío"}), 400
 
-    # ── Recopilar datos de NocoDB para darle contexto al agente ──
+    # ── Construir contexto pre-agregado ───────────────────────────────────────
     datos_contexto = ""
     try:
         if NOCODB_CONFIGURED:
-            if contexto_tipo in ("setter", "todos"):
-                setters = listar_registros("calificaciones_setters")[-limite:]
-                if setters:
-                    resumen_setters = []
-                    for s in setters:
-                        item = {
-                            "setter": s.get("Setter", ""),
-                            "nota": s.get("Nota Total", 0),
-                            "agendo": s.get("Agendó?", ""),
-                            "fecha": s.get("Fecha Llamada", ""),
-                            "rapport": s.get("Rapport", 0),
-                            "dolor": s.get("Identificación Dolor", 0),
-                            "venta_cita": s.get("Venta Cita", 0),
-                            "objeciones": s.get("Objeciones", 0),
-                            "puntos_fuertes": s.get("Puntos Fuertes", ""),
-                            "areas_mejora": s.get("Áreas de Mejora", ""),
-                            "resumen": s.get("Resumen", ""),
-                        }
-                        resumen_setters.append(item)
-                    datos_contexto += f"\n\n=== CALIFICACIONES SETTERS (últimas {len(resumen_setters)}) ===\n"
-                    datos_contexto += json.dumps(resumen_setters, ensure_ascii=False, indent=None)
-
-            if contexto_tipo in ("closer", "todos"):
-                closers = listar_registros("calificaciones_closers")[-limite:]
-                if closers:
-                    resumen_closers = []
-                    for c in closers:
-                        item = {
-                            "closer": c.get("Closer", ""),
-                            "nota": c.get("Nota Total", 0),
-                            "resultado": c.get("Resultado", ""),
-                            "fecha": c.get("Fecha Llamada", ""),
-                            "rapport": c.get("Rapport", 0),
-                            "descubrimiento": c.get("Descubrimiento", 0),
-                            "presentacion": c.get("Presentación", 0),
-                            "objeciones": c.get("Objeciones", 0),
-                            "cierre": c.get("Cierre", 0),
-                            "puntos_fuertes": c.get("Puntos Fuertes", ""),
-                            "areas_mejora": c.get("Áreas de Mejora", ""),
-                            "resumen": c.get("Resumen", ""),
-                        }
-                        resumen_closers.append(item)
-                    datos_contexto += f"\n\n=== CALIFICACIONES CLOSERS (últimas {len(resumen_closers)}) ===\n"
-                    datos_contexto += json.dumps(resumen_closers, ensure_ascii=False, indent=None)
-
-            # Leads
-            leads = listar_registros("calificaciones_leads")[-limite:]
-            if leads:
-                resumen_leads = []
-                for l in leads:
-                    resumen_leads.append({
-                        "calificacion": l.get("Calificación", 0),
-                        "nivel": l.get("Nivel", ""),
-                        "justificacion": l.get("Justificación", ""),
-                        "positivos": l.get("Positivos", ""),
-                        "negativos": l.get("Negativos", ""),
-                        "fecha": l.get("Fecha Llamada", ""),
-                    })
-                datos_contexto += f"\n\n=== CALIDAD DE LEADS (últimas {len(resumen_leads)}) ===\n"
-                datos_contexto += json.dumps(resumen_leads, ensure_ascii=False, indent=None)
-
+            datos_contexto = construir_contexto_chat(contexto_tipo, limite)
     except Exception as e:
-        print(f"[CHAT] Error obteniendo contexto de NocoDB: {e}")
-        datos_contexto = "(No se pudo obtener datos de NocoDB)"
+        print(f"[CHAT] Error construyendo contexto: {e}")
+        datos_contexto = f"(Error al obtener datos: {e})"
 
     hoy = datetime.now().strftime("%Y-%m-%d")
 
@@ -567,7 +640,7 @@ Tu rol es responder preguntas estratégicas del equipo de marketing y management
 Responde en español, de forma clara y estructurada. Si la pregunta requiere datos que no están disponibles, indícalo.
 
 DATOS DISPONIBLES:
-{datos_contexto if datos_contexto else "No hay datos cargados actualmente."}
+{datos_contexto if datos_contexto else "No hay datos cargados."}
 """
 
     try:
@@ -594,6 +667,10 @@ DATOS DISPONIBLES:
         respuesta = resp.json()["choices"][0]["message"]["content"]
         return jsonify({"respuesta": respuesta, "ok": True})
 
+    except http_requests.exceptions.HTTPError as e:
+        error_msg = e.response.text
+        print(f"[CHAT] Error HTTP al llamar a OpenAI: {error_msg}")
+        return jsonify({"error": f"OpenAI API Error: {error_msg}"}), 500
     except Exception as e:
         print(f"[CHAT] Error al llamar a OpenAI: {e}")
         return jsonify({"error": str(e)}), 500
