@@ -19,7 +19,7 @@ import requests
 from dotenv import load_dotenv
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-from scripts.nocodb_client import crear_registro, listar_registros
+from scripts.nocodb_client import crear_registro, listar_registros, actualizar_registro
 from scripts.agentes_config import clasificar_participante
 
 load_dotenv()
@@ -164,6 +164,36 @@ def llamar_openai_json(prompt: str, transcripcion: str) -> dict:
         return {"error": str(e)}
 
 
+def _marcar_calificado(r: dict) -> None:
+    """Marca la llamada como 'calificada' en NocoDB para que no se vuelva a procesar.
+
+    Why: el cron --semana corre cada día con el mismo rango (lunes→hoy). Sin esta
+    marca, las mismas llamadas se vuelven a calificar todos los días.
+    How to apply: invocar después de cada path exitoso o de un SKIP definitivo.
+    """
+    try:
+        noco_id = r.get("Id") or r.get("id")
+        if not noco_id:
+            return
+        actualizar_registro("llamadas_ventas", int(noco_id), {"Estado": "calificado"})
+    except Exception as e:
+        print(f"    [WARN] No se pudo marcar Estado=calificado: {e}")
+
+
+def _ids_ya_calificados(tabla: str) -> set:
+    """Devuelve el set de 'ID Llamada' que ya tienen calificación en `tabla`.
+
+    Why: idempotencia. Sin esto, cada corrida del cron --semana re-califica
+    las mismas llamadas todos los días, multiplicando el gasto de OpenAI.
+    """
+    try:
+        regs = listar_registros(tabla)
+        return {str(r.get("ID Llamada") or "").strip() for r in regs if r.get("ID Llamada")}
+    except Exception as e:
+        print(f"  [WARN] No se pudo leer '{tabla}' para idempotencia: {e}")
+        return set()
+
+
 def calificar_ventas(registros: list) -> tuple:
     """
     Califica llamadas de ventas respetando el Tipo (setter/closer).
@@ -173,6 +203,12 @@ def calificar_ventas(registros: list) -> tuple:
     califs_leads = []
     califs_closers = []
     califs_setters = []
+
+    # Pre-cargar IDs ya calificados para no repetir gasto en OpenAI
+    ids_leads   = _ids_ya_calificados("calificaciones_leads")
+    ids_setters = _ids_ya_calificados("calificaciones_setters")
+    ids_closers = _ids_ya_calificados("calificaciones_closers")
+    print(f"  [IDEMPOTENCIA] Ya calificados — leads: {len(ids_leads)} | setters: {len(ids_setters)} | closers: {len(ids_closers)}")
 
     for r in registros:
         duracion_min = r.get("Duración (min)") or r.get("Duración", 0)
@@ -189,6 +225,7 @@ def calificar_ventas(registros: list) -> tuple:
             continue
 
         call_id = r.get("ID Fathom", "N/A")
+        call_id_str = str(call_id).strip()
         fecha = r.get("Fecha", "")
         mes_anio = datetime.now().strftime("%Y-%m")
 
@@ -206,8 +243,12 @@ def calificar_ventas(registros: list) -> tuple:
         print(f"\n  → [{call_id}] Tipo: {tipo_llamada or 'sin definir'} | Agente: {nombre_agente_meta}")
 
         # ── Calificar Lead (siempre, independiente del tipo) ──
-        print(f"    Evaluando LEAD...")
-        resultado_lead = llamar_openai_json(PROMPT_CALIDAD_LEAD, transcripcion)
+        if call_id_str in ids_leads:
+            print(f"    [SKIP] LEAD ya calificado para {call_id_str}.")
+            resultado_lead = {"error": "ya_calificado"}
+        else:
+            print(f"    Evaluando LEAD...")
+            resultado_lead = llamar_openai_json(PROMPT_CALIDAD_LEAD, transcripcion)
         if "error" not in resultado_lead:
             try:
                 crear_registro("calificaciones_leads", {
@@ -221,11 +262,16 @@ def calificar_ventas(registros: list) -> tuple:
                     "Mes-Año": mes_anio,
                 })
                 califs_leads.append(resultado_lead.get("calificacion", 0))
+                ids_leads.add(call_id_str)
             except Exception as e:
                 print(f"    [ERROR] No se pudo guardar calificacion_lead: {e}")
 
         # ── Calificar según Tipo: SETTER o CLOSER ──
         if tipo_llamada in ("setter",) and agente_conocido:
+            if call_id_str in ids_setters:
+                print(f"    [SKIP] SETTER ya calificado para {call_id_str}.")
+                _marcar_calificado(r)
+                continue
             print(f"    Evaluando SETTER...")
             resultado_setter = llamar_openai_json(PROMPT_CALIDAD_SETTER, transcripcion + contexto_agente)
             if "error" not in resultado_setter:
@@ -254,11 +300,17 @@ def calificar_ventas(registros: list) -> tuple:
                     }
                     crear_registro("calificaciones_setters", payload)
                     califs_setters.append(float(resultado_setter.get("calificacion_total", 0)))
+                    ids_setters.add(call_id_str)
                     print(f"    [OK] Setter calificado: {nombre_setter} → {resultado_setter.get('calificacion_total')}/10")
+                    _marcar_calificado(r)
                 except Exception as e:
                     print(f"    [ERROR] No se pudo guardar calificacion_setter: {e}")
 
         elif tipo_llamada in ("closer",) and agente_conocido:
+            if call_id_str in ids_closers:
+                print(f"    [SKIP] CLOSER ya calificado para {call_id_str}.")
+                _marcar_calificado(r)
+                continue
             print(f"    Evaluando CLOSER...")
             resultado_closer = llamar_openai_json(PROMPT_CALIDAD_CLOSER, transcripcion + contexto_agente)
             if "error" not in resultado_closer:
@@ -288,64 +340,20 @@ def calificar_ventas(registros: list) -> tuple:
                     }
                     crear_registro("calificaciones_closers", payload_closer)
                     califs_closers.append(float(resultado_closer.get("calificacion_total", 0)))
+                    ids_closers.add(call_id_str)
                     print(f"    [OK] Closer calificado: {nombre_closer} → {resultado_closer.get('calificacion_total')}/10")
+                    _marcar_calificado(r)
                 except Exception as e:
                     print(f"    [ERROR] No se pudo guardar calificacion_closer: {e}")
 
         elif not agente_conocido:
             print(f"    [SKIP] {call_id}: agente '{nombre_agente_meta}' no reconocido. No se guarda setter/closer.")
         else:
-            # Tipo desconocido: intentar identificar por contexto (califica ambos)
-            print(f"    [WARN] Tipo de llamada desconocido ('{tipo_llamada}'). Calificando como setter y closer.")
-            # Setter
-            resultado_setter = llamar_openai_json(PROMPT_CALIDAD_SETTER, transcripcion + contexto_agente)
-            if "error" not in resultado_setter:
-                desglose = resultado_setter.get("desglose", {})
-                nombre_setter = resultado_setter.get("nombre_setter", nombre_agente_meta)
-                try:
-                    crear_registro("calificaciones_setters", {
-                        "ID Llamada": call_id,
-                        "Setter": nombre_setter,
-                        "Nota Total": float(resultado_setter.get("calificacion_total", 0)),
-                        "Rapport": float(desglose.get("rapport", 0)),
-                        "Identificación Dolor": float(desglose.get("identificacion_dolor", 0)),
-                        "Venta Cita": float(desglose.get("venta_cita", 0)),
-                        "Objeciones": float(desglose.get("manejo_objeciones", 0)),
-                        "Agendó?": str(resultado_setter.get("agendo_cita", "")),
-                        "Puntos Fuertes": json.dumps(resultado_setter.get("puntos_fuertes", []), ensure_ascii=False),
-                        "Áreas de Mejora": json.dumps(resultado_setter.get("areas_mejora", []), ensure_ascii=False),
-                        "Resumen": resultado_setter.get("resumen_ejecutivo", ""),
-                        "Fecha Llamada": fecha,
-                        "Mes-Año": mes_anio,
-                    })
-                    califs_setters.append(float(resultado_setter.get("calificacion_total", 0)))
-                except Exception as e:
-                    print(f"    [ERROR] setter (fallback): {e}")
-            # Closer
-            resultado_closer = llamar_openai_json(PROMPT_CALIDAD_CLOSER, transcripcion + contexto_agente)
-            if "error" not in resultado_closer:
-                desglose = resultado_closer.get("desglose", {})
-                nombre_closer = resultado_closer.get("nombre_closer", nombre_agente_meta)
-                try:
-                    crear_registro("calificaciones_closers", {
-                        "ID Llamada": call_id,
-                        "Closer": nombre_closer,
-                        "Nota Total": float(resultado_closer.get("calificacion_total", 0)),
-                        "Rapport": float(desglose.get("rapport", 0)),
-                        "Descubrimiento": float(desglose.get("descubrimiento", 0)),
-                        "Presentación": float(desglose.get("presentacion", 0)),
-                        "Objeciones": float(desglose.get("objeciones", 0)),
-                        "Cierre": float(desglose.get("cierre", 0)),
-                        "Resultado": str(resultado_closer.get("resultado_llamada", "")),
-                        "Puntos Fuertes": json.dumps(resultado_closer.get("puntos_fuertes", []), ensure_ascii=False),
-                        "Áreas de Mejora": json.dumps(resultado_closer.get("areas_mejora", []), ensure_ascii=False),
-                        "Resumen": resultado_closer.get("resumen_ejecutivo", ""),
-                        "Fecha Llamada": fecha,
-                        "Mes-Año": mes_anio,
-                    })
-                    califs_closers.append(float(resultado_closer.get("calificacion_total", 0)))
-                except Exception as e:
-                    print(f"    [ERROR] closer (fallback): {e}")
+            # Tipo desconocido: NO doblar gasto llamando setter+closer.
+            # Why: el fallback anterior gastaba 3x (lead+setter+closer) en llamadas sin tipo claro,
+            # cuyos resultados normalmente eran descartados/contradictorios. Mejor saltar.
+            print(f"    [SKIP] Tipo de llamada desconocido ('{tipo_llamada}'). No se califica setter/closer para evitar sobrecosto.")
+            _marcar_calificado(r)
 
     avg_leads   = round(sum(califs_leads)   / len(califs_leads),   2) if califs_leads   else 0
     avg_closers = round(sum(califs_closers) / len(califs_closers), 2) if califs_closers else 0
