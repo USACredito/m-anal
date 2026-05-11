@@ -1629,6 +1629,48 @@ body {
     border-color: var(--accent);
 }
 
+.chat-date-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chat-date {
+    flex: 1;
+    min-width: 0;
+    width: 100%;
+    color-scheme: dark;
+}
+
+.chat-date-sep {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.chat-date-presets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.chat-date-preset {
+    background: rgba(139, 92, 246, 0.08);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-family: 'Inter', sans-serif;
+    font-size: 11.5px;
+    padding: 5px 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+}
+
+.chat-date-preset:hover {
+    background: rgba(139, 92, 246, 0.18);
+    border-color: var(--accent);
+}
+
 .chat-ejemplos {
     display: flex;
     flex-direction: column;

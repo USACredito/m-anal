@@ -142,12 +142,18 @@
         </div>
 
         <div class="chat-config-group">
-          <label class="chat-config-label">Límite de registros</label>
-          <select id="chatLimite" class="chat-select">
-            <option value="100">Últimas 100 llamadas</option>
-            <option value="300" selected>Últimas 300 llamadas</option>
-            <option value="500">Últimas 500 llamadas</option>
-          </select>
+          <label class="chat-config-label">Rango de fechas</label>
+          <div class="chat-date-row">
+            <input type="date" id="chatFechaInicio" class="chat-select chat-date">
+            <span class="chat-date-sep">→</span>
+            <input type="date" id="chatFechaFin" class="chat-select chat-date">
+          </div>
+          <div class="chat-date-presets">
+            <button type="button" class="chat-date-preset" data-rango="7">7 días</button>
+            <button type="button" class="chat-date-preset" data-rango="30">30 días</button>
+            <button type="button" class="chat-date-preset" data-rango="mes">Este mes</button>
+            <button type="button" class="chat-date-preset" data-rango="todo">Todo</button>
+          </div>
         </div>
 
         <div class="chat-ejemplos">
