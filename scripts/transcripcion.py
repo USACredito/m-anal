@@ -5,6 +5,7 @@ Descarga audio y lo transcribe usando Gemini.
 FIX: Renueva URLs expiradas de Aircall. Usa modelo Gemini correcto.
 """
 
+import argparse
 import os
 import sys
 import requests
@@ -197,16 +198,14 @@ def transcribir_con_deepgram(ruta_audio: str, call_id: str) -> str | None:
             print(f"  [DETALLE] {e.response.text}")
         return None
 
-def procesar_llamadas():
+def procesar_llamadas(fecha_inicio: str = "", fecha_fin: str = "", duracion_min: int = 2):
     """
     Recorre las tablas de NocoDB buscando llamadas 'pendientes' o sin estado.
-    SOLO procesa llamadas desde el lunes de la semana actual en adelante.
+    Filtra por rango de fechas (Fecha) y duración mínima.
     """
     total_procesadas = 0
 
-    hoy = datetime.now()
-    fecha_corte = "2000-01-01" # Procesar todo el backlog pendiente
-    print(f"\n📅 Solo procesando llamadas desde: {fecha_corte} (lunes de esta semana)")
+    print(f"\n📅 Rango: {fecha_inicio or '...'} → {fecha_fin or '...'} | Duración mínima: {duracion_min} min")
 
     for tabla in TABLAS:
         print(f"\n--- Revisando tabla: {tabla} ---")
@@ -219,17 +218,28 @@ def procesar_llamadas():
             print(f"  [WARN] Error listando registros: {e}")
             continue
 
-        # Deduplicar y filtrar por fecha de esta semana
+        # Deduplicar, filtrar por fecha y duración
         vistos, registros_unicos = set(), []
         for r in registros:
-            if r.get("Id") not in vistos:
-                # Filtrar por fecha — solo esta semana en adelante
-                fecha_llamada = r.get("Fecha", "") or ""
-                if fecha_llamada < fecha_corte:
-                    vistos.add(r.get("Id"))
-                    continue  # Ignorar llamadas antiguas sin marcarlas
-                registros_unicos.append(r)
-                vistos.add(r.get("Id"))
+            rid = r.get("Id")
+            if rid in vistos:
+                continue
+            vistos.add(rid)
+
+            fecha_llamada = (r.get("Fecha") or "")[:10]
+            if fecha_inicio and fecha_llamada < fecha_inicio:
+                continue
+            if fecha_fin and fecha_llamada > fecha_fin:
+                continue
+
+            try:
+                dur = float(r.get("Duración (min)") or 0)
+            except (ValueError, TypeError):
+                dur = 0
+            if dur < duracion_min:
+                continue
+
+            registros_unicos.append(r)
 
         print(f"  Encontradas {len(registros_unicos)} llamadas para procesar.")
 
@@ -279,4 +289,10 @@ def procesar_llamadas():
 
 
 if __name__ == "__main__":
-    procesar_llamadas()
+    parser = argparse.ArgumentParser(description="Transcribe llamadas pendientes de NocoDB.")
+    parser.add_argument("--inicio", default="", help="Fecha inicio YYYY-MM-DD (filtra campo Fecha)")
+    parser.add_argument("--fin",    default="", help="Fecha fin YYYY-MM-DD (filtra campo Fecha)")
+    parser.add_argument("--duracion", type=int, default=2,
+                        help="Duración mínima en minutos (default 2)")
+    args = parser.parse_args()
+    procesar_llamadas(fecha_inicio=args.inicio, fecha_fin=args.fin, duracion_min=args.duracion)
