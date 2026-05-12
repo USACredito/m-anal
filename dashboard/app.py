@@ -463,16 +463,28 @@ def api_resumen_mensual():
     return jsonify({"demo": True, "datos": demo})
 
 
-def construir_contexto_chat(contexto_tipo: str, limite: int) -> str:
+def construir_contexto_chat(contexto_tipo: str, fecha_inicio: str = "", fecha_fin: str = "") -> str:
     """
     Construye un contexto compacto y pre-agregado para el agente IA.
-    En vez de enviar N registros crudos, calcula estadísticas por agente,
-    temas frecuentes y tendencias. Output: ~5-15 KB independiente del volumen.
+    Filtra los registros por rango de fechas (campo 'Fecha Llamada', formato YYYY-MM-DD).
+    Si fecha_inicio o fecha_fin vienen vacíos, no se acota por ese extremo.
     """
     hoy = datetime.now().date()
     hace_7  = hoy - timedelta(days=7)
     hace_30 = hoy - timedelta(days=30)
     partes  = []
+
+    def _en_rango(r) -> bool:
+        f = str(r.get("Fecha Llamada") or "")[:10]
+        if not f:
+            return not (fecha_inicio or fecha_fin)
+        if fecha_inicio and f < fecha_inicio:
+            return False
+        if fecha_fin and f > fecha_fin:
+            return False
+        return True
+
+    rango_lbl = f"{fecha_inicio or '...'} → {fecha_fin or '...'}" if (fecha_inicio or fecha_fin) else "Todo"
 
     def _float(v):
         try: return float(v) if v is not None else None
@@ -549,11 +561,11 @@ def construir_contexto_chat(contexto_tipo: str, limite: int) -> str:
     if contexto_tipo in ("setter", "todos"):
         todos = [r for r in listar_registros("calificaciones_setters")
                  if es_setter_oficial(r.get("Setter") or "")]
-        regs = todos[-limite:] if limite else todos
+        regs = [r for r in todos if _en_rango(r)]
         if regs:
             dims = ["Rapport", "Identificación Dolor", "Venta Cita", "Objeciones"]
             partes += [
-                f"=== SETTERS — {len(regs)} llamadas ===",
+                f"=== SETTERS — {len(regs)} llamadas ({rango_lbl}) ===",
                 f"Tendencia: {json.dumps(_tendencia(regs, 'Nota Total'))}",
                 f"Por agente: {json.dumps(_stats_agentes(regs, 'Setter', dims, 'Agendó?'), ensure_ascii=False)}",
                 f"Áreas de mejora frecuentes: {json.dumps(_temas_top(regs, 'Áreas de Mejora'), ensure_ascii=False)}",
@@ -564,11 +576,11 @@ def construir_contexto_chat(contexto_tipo: str, limite: int) -> str:
     if contexto_tipo in ("closer", "todos"):
         todos = [r for r in listar_registros("calificaciones_closers")
                  if es_closer_oficial(r.get("Closer") or "")]
-        regs = todos[-limite:] if limite else todos
+        regs = [r for r in todos if _en_rango(r)]
         if regs:
             dims = ["Rapport", "Descubrimiento", "Presentación", "Objeciones", "Cierre"]
             partes += [
-                f"\n=== CLOSERS — {len(regs)} llamadas ===",
+                f"\n=== CLOSERS — {len(regs)} llamadas ({rango_lbl}) ===",
                 f"Tendencia: {json.dumps(_tendencia(regs, 'Nota Total'))}",
                 f"Por agente: {json.dumps(_stats_agentes(regs, 'Closer', dims, 'Resultado'), ensure_ascii=False)}",
                 f"Áreas de mejora frecuentes: {json.dumps(_temas_top(regs, 'Áreas de Mejora'), ensure_ascii=False)}",
@@ -578,7 +590,7 @@ def construir_contexto_chat(contexto_tipo: str, limite: int) -> str:
     # ── LEADS ────────────────────────────────────────────────────────────────
     if contexto_tipo in ("leads", "todos"):
         todos = listar_registros("calificaciones_leads")
-        regs = todos[-limite:] if limite else todos
+        regs = [r for r in todos if _en_rango(r)]
         if regs:
             niveles, notas = defaultdict(int), []
             for l in regs:
@@ -586,7 +598,7 @@ def construir_contexto_chat(contexto_tipo: str, limite: int) -> str:
                 nota = _float(l.get("Calificación"))
                 if nota is not None: notas.append(nota)
             partes += [
-                f"\n=== LEADS — {len(regs)} evaluados ===",
+                f"\n=== LEADS — {len(regs)} evaluados ({rango_lbl}) ===",
                 f"Distribución: {json.dumps(dict(niveles))}",
                 f"Nota promedio: {round(sum(notas)/len(notas), 1) if notas else 'N/A'}",
                 f"Tendencia: {json.dumps(_tendencia(regs, 'Calificación'))}",
@@ -600,7 +612,8 @@ def api_chat():
     """
     Endpoint de chat con el agente IA.
     Recibe una pregunta, obtiene contexto de NocoDB y responde con GPT-4o-mini.
-    Body JSON: { "mensaje": "...", "contexto": "setter|closer|todos", "limite": 300 }
+    Body JSON: { "mensaje": "...", "contexto": "setter|closer|todos",
+                 "fecha_inicio": "YYYY-MM-DD", "fecha_fin": "YYYY-MM-DD" }
     """
     api_key = os.getenv("OPENAI_API_KEY", "")
     if not api_key:
@@ -609,7 +622,8 @@ def api_chat():
     data = request.json or {}
     mensaje = (data.get("mensaje") or "").strip()
     contexto_tipo = (data.get("contexto") or "todos").lower()
-    limite = min(int(data.get("limite") or 300), 500)
+    fecha_inicio = (data.get("fecha_inicio") or "").strip()[:10]
+    fecha_fin    = (data.get("fecha_fin")    or "").strip()[:10]
 
     if not mensaje:
         return jsonify({"error": "Mensaje vacío"}), 400
@@ -618,7 +632,7 @@ def api_chat():
     datos_contexto = ""
     try:
         if NOCODB_CONFIGURED:
-            datos_contexto = construir_contexto_chat(contexto_tipo, limite)
+            datos_contexto = construir_contexto_chat(contexto_tipo, fecha_inicio, fecha_fin)
     except Exception as e:
         print(f"[CHAT] Error construyendo contexto: {e}")
         datos_contexto = f"(Error al obtener datos: {e})"

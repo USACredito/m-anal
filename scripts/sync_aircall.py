@@ -3,6 +3,7 @@ scripts/sync_aircall.py
 Sincroniza el historial de llamadas de Aircall con NocoDB.
 """
 
+import argparse
 import os
 import requests
 from datetime import datetime, timedelta
@@ -28,17 +29,16 @@ def _get_ids_existentes() -> set:
         print(f"[Aircall] WARN: No se pudo verificar IDs existentes: {e}")
         return set()
 
-def sync_calls():
+def sync_calls(dias_atras: int = 8):
     if not AIRCALL_ID or not AIRCALL_TOKEN:
         print("[Aircall] Error: Faltan credenciales en .env")
         return
 
-    print("[Aircall] Consultando llamadas recientes (últimos 8 días)...")
+    print(f"[Aircall] Consultando llamadas recientes (últimos {dias_atras} días)...")
     url = f"{BASE_URL}/calls"
     auth = (AIRCALL_ID, AIRCALL_TOKEN)
 
-    # Rango de 8 días
-    from_date = int((datetime.now() - timedelta(days=8)).timestamp())
+    from_date = int((datetime.now() - timedelta(days=dias_atras)).timestamp())
     params = {"from": from_date, "per_page": 100}
 
     try:
@@ -99,4 +99,10 @@ def sync_calls():
         print(f"[Aircall] Error inesperado: {str(e)}")
 
 if __name__ == "__main__":
-    sync_calls()
+    parser = argparse.ArgumentParser(description="Sincroniza llamadas de Aircall con NocoDB.")
+    parser.add_argument("--dias", type=int, default=8,
+                        help="Cuántos días hacia atrás traer desde Aircall (default 8).")
+    parser.add_argument("--inicio", help="(ignorado; aceptado para compat con main.py)")
+    parser.add_argument("--fin",    help="(ignorado; aceptado para compat con main.py)")
+    args = parser.parse_args()
+    sync_calls(dias_atras=args.dias)

@@ -18,7 +18,51 @@ let _llamadasIndexadas = [];  // store para acceso por índice desde botones
 document.addEventListener("DOMContentLoaded", () => {
     verificarConexion();
     cargarMetricas();
+    initChatFechas();
 });
+
+function _hoyISO() {
+    const d = new Date();
+    const tz = d.getTimezoneOffset() * 60000;
+    return new Date(d - tz).toISOString().slice(0, 10);
+}
+
+function _sumarDiasISO(iso, dias) {
+    const d = new Date(iso + "T00:00:00");
+    d.setDate(d.getDate() + dias);
+    const tz = d.getTimezoneOffset() * 60000;
+    return new Date(d - tz).toISOString().slice(0, 10);
+}
+
+function initChatFechas() {
+    const ini = document.getElementById("chatFechaInicio");
+    const fin = document.getElementById("chatFechaFin");
+    if (!ini || !fin) return;
+
+    const hoy = _hoyISO();
+    fin.value = hoy;
+    ini.value = _sumarDiasISO(hoy, -30);
+
+    document.querySelectorAll(".chat-date-preset").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const rango = btn.dataset.rango;
+            const hoyIso = _hoyISO();
+            if (rango === "7") {
+                fin.value = hoyIso; ini.value = _sumarDiasISO(hoyIso, -7);
+            } else if (rango === "30") {
+                fin.value = hoyIso; ini.value = _sumarDiasISO(hoyIso, -30);
+            } else if (rango === "mes") {
+                const d = new Date();
+                const m = String(d.getMonth() + 1).padStart(2, "0");
+                ini.value = `${d.getFullYear()}-${m}-01`;
+                fin.value = hoyIso;
+            } else if (rango === "todo") {
+                ini.value = "";
+                fin.value = "";
+            }
+        });
+    });
+}
 
 async function verificarConexion() {
     const dot = document.getElementById("conexionDot");
@@ -586,7 +630,8 @@ async function enviarChat() {
     if (!mensaje) return;
 
     const contexto = document.getElementById("chatContexto").value;
-    const limite = parseInt(document.getElementById("chatLimite").value);
+    const fecha_inicio = document.getElementById("chatFechaInicio").value;
+    const fecha_fin    = document.getElementById("chatFechaFin").value;
     const btn = document.getElementById("chatSendBtn");
 
     // Agregar mensaje del usuario
@@ -603,7 +648,7 @@ async function enviarChat() {
         const r = await fetch(`${API}/api/chat`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ mensaje, contexto, limite })
+            body: JSON.stringify({ mensaje, contexto, fecha_inicio, fecha_fin })
         });
         const data = await r.json();
         eliminarMensaje(loadingId);

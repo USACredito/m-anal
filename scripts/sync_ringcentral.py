@@ -3,6 +3,7 @@ scripts/sync_ringcentral.py
 Sincroniza el historial de llamadas de RingCentral con NocoDB.
 """
 
+import argparse
 import os
 import requests
 import base64
@@ -159,4 +160,11 @@ def sync_calls(dias_atras=8):
     print(f"[RC] Sync completado: {nuevas} nuevas llamadas insertadas.")
 
 if __name__ == "__main__":
-    sync_calls(dias_atras=8)
+    parser = argparse.ArgumentParser(description="Sincroniza llamadas de RingCentral con NocoDB.")
+    parser.add_argument("--dias", type=int, default=8,
+                        help="Cuántos días hacia atrás traer desde RC (default 8).")
+    # Aceptamos --inicio/--fin para compatibilidad con main.py, aunque RC solo usa dateFrom.
+    parser.add_argument("--inicio", help="(ignorado por RC; aceptado para compat con main.py)")
+    parser.add_argument("--fin",    help="(ignorado por RC; aceptado para compat con main.py)")
+    args = parser.parse_args()
+    sync_calls(dias_atras=args.dias)
