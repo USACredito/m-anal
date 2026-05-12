@@ -31,9 +31,12 @@ os.makedirs(TMP_DIR, exist_ok=True)
 
 TABLAS = ["llamadas_ventas"]
 BATCH_SIZE = 30    # Procesar máx 30 llamadas por ejecución (cron horario)
-DELAY_ENTRE_DESCARGAS = 5  # segundos entre descargas para no saturar RC
-RC_RATE_LIMIT_WAIT   = 60  # segundos a esperar si RC devuelve 429
-RC_MAX_REINTENTOS    = 5   # reintentos máximos por llamada
+DELAY_ENTRE_DESCARGAS = 12  # segundos entre descargas (más suave con RC)
+RC_RATE_LIMIT_WAIT   = 90  # segundos a esperar si RC devuelve 429
+RC_MAX_REINTENTOS    = 6   # reintentos máximos por llamada
+
+# Carpeta donde descargar_grabaciones_mayo.py guarda los .mp3 pre-descargados
+GRABACIONES_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "grabaciones", "mayo_2026")
 
 # Token RC cacheado para toda la sesión (se obtiene 1 sola vez)
 _rc_token_cache = None
@@ -85,12 +88,21 @@ def descargar_audio(url: str, call_id: str, titulo: str = ""):
     Descarga un archivo de audio desde una URL y lo guarda en .tmp/
     - RingCentral: usa token Bearer cacheado (1 sola petición de token por sesión)
     - Aircall: renueva URL si está expirada (403/404)
+    Primero busca el archivo en grabaciones/mayo_2026/{rc,aircall}/ para evitar re-descargar.
     """
+    es_ringcentral = "ringcentral.com" in url
+
+    # Reusar archivo pre-descargado si existe
+    subfolder = "rc" if es_ringcentral else "aircall"
+    predownloaded = os.path.join(GRABACIONES_DIR, subfolder, f"{call_id}.mp3")
+    if os.path.exists(predownloaded) and os.path.getsize(predownloaded) > 0:
+        print(f"  → [{call_id}] Usando archivo pre-descargado ({os.path.getsize(predownloaded)//1024} KB)")
+        return predownloaded
+
     print(f"  → [{call_id}] Descargando audio...")
     ruta_local = os.path.join(TMP_DIR, f"{call_id}.mp3")
 
     headers = {}
-    es_ringcentral = "ringcentral.com" in url
 
     if es_ringcentral:
         token = obtener_token_rc_cached()
@@ -279,8 +291,8 @@ def procesar_llamadas(fecha_inicio: str = "", fecha_fin: str = "", duracion_min:
                 # Marcar como fallida para no reintentarla indefinidamente
                 actualizar_registro(tabla, nocodb_id, {"Estado": "error_transcripcion"})
 
-            # Limpiar archivo local
-            if os.path.exists(ruta_local):
+            # Limpiar solo si es un archivo temporal (no borrar pre-descargados)
+            if os.path.exists(ruta_local) and ruta_local.startswith(TMP_DIR):
                 os.remove(ruta_local)
 
             time.sleep(DELAY_ENTRE_DESCARGAS)
